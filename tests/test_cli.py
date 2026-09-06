@@ -5,7 +5,6 @@ import json
 import pytest
 
 from nano import benchmark, demo, subset
-from tests.test_data import _write_fake_lswmd
 
 
 def test_benchmark_writes_a_results_file(tmp_path, capsys):
@@ -48,9 +47,8 @@ def test_demo_rejects_a_wafer_index_it_does_not_have():
         demo.main(["--synthetic", "--wafers", "2", "--wafer", "9", "--no-figures"])
 
 
-def test_subset_builder_writes_a_committable_index(tmp_path, capsys):
-    raw = tmp_path / "LSWMD.pkl"
-    _write_fake_lswmd(raw)
+def test_subset_builder_writes_a_committable_index(tmp_path, capsys, fake_lswmd):
+    raw = fake_lswmd(tmp_path / "LSWMD.pkl")
     out = tmp_path / "subset.json"
 
     assert subset.main(["--raw", str(raw), "--out", str(out), "--wafers", "3", "--min-dies", "100"]) == 0

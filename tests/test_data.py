@@ -53,34 +53,8 @@ def test_synthetic_source_is_deterministic_and_labelled():
     assert not np.array_equal(a[0].reality, synthetic_wafers(3, seed=4)[0].reality)
 
 
-def _write_fake_lswmd(path, n_wafers=8, size=24):
-    """A pandas pickle shaped like LSWMD.pkl, so the WM-811K path is exercised."""
-    pd = pytest.importorskip("pandas")
-    rng = np.random.default_rng(0)
-    rows = []
-    patterns = ["Center", "Edge-Ring", "Scratch", "none"]
-    for i in range(n_wafers):
-        yy, xx = np.mgrid[0:size, 0:size]
-        centre = (size - 1) / 2
-        inside = np.sqrt((yy - centre) ** 2 + (xx - centre) ** 2) <= centre
-        wafer_map = np.where(rng.random((size, size)) < 0.2, FAIL, PASS)
-        wafer_map = np.where(inside, wafer_map, OUTSIDE)
-        rows.append(
-            {
-                "waferMap": wafer_map,
-                # WM-811K nests its labels inside object arrays; the loader must cope.
-                "failureType": np.array([[patterns[i % len(patterns)]]], dtype=object),
-                "waferIndex": i,
-            }
-        )
-    frame = pd.DataFrame(rows)
-    frame.to_pickle(path)
-    return frame
-
-
-def test_subset_index_round_trips(tmp_path):
-    raw = tmp_path / "LSWMD.pkl"
-    _write_fake_lswmd(raw)
+def test_subset_index_round_trips(tmp_path, fake_lswmd):
+    raw = fake_lswmd(tmp_path / "LSWMD.pkl")
     index_path = tmp_path / "subset.json"
 
     doc = build_subset(raw, index_path, seed=0, n_wafers=4, min_dies=100)
@@ -97,9 +71,8 @@ def test_subset_index_round_trips(tmp_path):
     assert all(r.source == "WM-811K" for r in records)
 
 
-def test_subset_rejects_small_grids(tmp_path):
-    raw = tmp_path / "LSWMD.pkl"
-    _write_fake_lswmd(raw, size=8)
+def test_subset_rejects_small_grids(tmp_path, fake_lswmd):
+    raw = fake_lswmd(tmp_path / "LSWMD.pkl", size=8)
     with pytest.raises(RuntimeError, match="passed the filters"):
         build_subset(raw, tmp_path / "subset.json", n_wafers=2, min_dies=400)
 
