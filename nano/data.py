@@ -43,6 +43,12 @@ class WaferRecord:
     reality: np.ndarray  # (N,) float in {0.0, 1.0}, ordered by coords
     coords: np.ndarray  # (N, 2) int, (row, col) of every in-wafer die
     source: str = "WM-811K"
+    target_kind: str = "binary"
+    """What the reality field holds: "binary" pass/fail, or "continuous" readings.
+
+    It selects which metrics apply — the class-balanced ones are meaningless on a
+    continuous target — and it is recorded in the results file.
+    """
 
     @property
     def n_dies(self) -> int:
@@ -87,6 +93,7 @@ def record_from_map(
         reality=reality,
         coords=coords.astype(int),
         source=source,
+        target_kind="binary",
     )
 
 

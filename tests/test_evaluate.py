@@ -69,13 +69,41 @@ def test_every_episode_is_recorded_so_wins_and_losses_stay_visible(summary):
     episodes = summary["episodes"]
     assert len(episodes) == 2 * 2  # wafers x seeds
     for episode in episodes:
-        assert set(episode["final"]) == {"nano", "random", "grid"}
+        # The two measurement-free references are recorded per episode too, so a
+        # pairing against them can be recomputed from the published file.
+        assert set(episode["final"]) == {"nano", "random", "grid", "prior", "constant"}
         assert episode["prior_error"] > 0
 
 
 def test_the_summary_round_trips_as_json(tmp_path, summary):
+    from nano.evaluate import json_safe
+
     path = write_summary(summary, tmp_path / "benchmark_summary.json")
-    assert json.loads(path.read_text()) == json.loads(json.dumps(summary))
+    assert json.loads(path.read_text()) == json_safe(summary)
+
+
+def test_the_written_file_is_json_a_strict_parser_accepts(tmp_path, summary):
+    """`NaN` is what Python writes and what JSON forbids.
+
+    A metric can legitimately have no value — a percentage improvement over a
+    baseline of exactly zero — and writing that as a bare NaN produces a file
+    the site cannot parse and refuses to render.
+    """
+    path = write_summary(summary, tmp_path / "benchmark_summary.json")
+    text = path.read_text()
+    assert "NaN" not in text and "Infinity" not in text
+    json.loads(text, parse_constant=_no_constants)
+
+    # The undefined value survives as null rather than being invented.
+    passing = summary["comparisons"]["mae_passing"]["constant"]
+    assert passing["relative_mean"] != passing["relative_mean"]  # NaN in memory
+    written = json.loads(text)["comparisons"]["mae_passing"]["constant"]
+    assert written["relative_mean"] is None
+    assert written["mean"] is not None  # the absolute difference is still defined
+
+
+def _no_constants(name):
+    raise AssertionError(f"results file contains the non-JSON constant {name}")
 
 
 def test_correction_beats_the_uncorrected_prior(summary):
@@ -83,6 +111,85 @@ def test_correction_beats_the_uncorrected_prior(summary):
     prior_error = summary["prior"]["initial_error"]["mean"]
     for strategy in summary["strategies"].values():
         assert strategy["final"]["mean"] < prior_error
+
+
+def test_measurement_free_references_are_scored_alongside_the_strategies(summary):
+    """A rule that cannot beat a predictor which reads nothing has earned nothing."""
+    references = summary["references"]
+    assert set(references) == {"prior", "constant"}
+    for reference in references.values():
+        assert reference["final"]["mean"] >= 0
+        assert "mae" in reference["metrics"] and "balanced_mae" in reference["metrics"]
+
+    # The constant predictor is the trap MAE alone walks into: strong on MAE,
+    # and exactly 0.5 once the two classes are weighted equally.
+    assert references["constant"]["metrics"]["balanced_mae"]["mean"] == pytest.approx(0.5)
+
+
+def test_every_comparison_carries_an_interval_and_a_win_count(summary):
+    comparisons = summary["comparisons"]
+    assert "mae" in comparisons and "balanced_mae" in comparisons
+
+    for metric, arms in comparisons.items():
+        assert "nano" not in arms  # nothing is compared against itself
+        for arm, result in arms.items():
+            assert result["ci_low"] <= result["mean"] <= result["ci_high"]
+            assert result["wins"] + result["losses"] + result["ties"] == result["n"]
+            assert result["n"] == 2 * 2  # wafers x seeds
+            assert isinstance(result["separates"], bool)
+            assert "paired bootstrap" in result["method"]
+
+
+def test_a_comparison_that_does_not_separate_is_marked_as_such(summary):
+    """The site must be able to print "not separated" instead of a bare mean."""
+    for arms in summary["comparisons"].values():
+        for result in arms.values():
+            spans_zero = result["ci_low"] < 0 < result["ci_high"]
+            assert result["separates"] is not spans_zero
+
+
+def test_secondary_metrics_are_reported_for_every_strategy(summary):
+    primary = summary["metric"]["key"]
+    for strategy in summary["strategies"].values():
+        metrics = strategy["metrics"]
+        assert {"mae", "balanced_mae", "mae_failing", "mae_passing", "rmse"} <= set(metrics)
+        # `final` is the primary metric, whichever that is, so the site's table
+        # and the comparisons it prints can never be on different scales.
+        assert strategy["final"] == metrics[primary]
+
+    # A binary target leads with the balanced metric: plain MAE on rare failures
+    # is won by a predictor that reads nothing.
+    assert primary == "balanced_mae"
+    assert summary["metrics"]["mae"]["direction"] == "lower_is_better"
+
+
+def test_the_primary_metric_can_be_overridden(summary):
+    from nano.data import synthetic_wafers
+
+    plain = run_benchmark(
+        synthetic_wafers(2, seed=1, grid=20),
+        seeds=[0, 1],
+        initial_measurements=10,
+        budget=12,
+        primary_metric="mae",
+    )
+    assert plain["metric"]["key"] == "mae"
+    assert plain["strategies"]["nano"]["final"] == plain["strategies"]["nano"]["metrics"]["mae"]
+    # Same run, different lens: the underlying per-metric numbers are unchanged.
+    assert plain["strategies"]["nano"]["metrics"] == summary["strategies"]["nano"]["metrics"]
+
+
+def test_an_unknown_metric_is_refused():
+    from nano.data import synthetic_wafers
+
+    with pytest.raises(ValueError, match="unknown metric"):
+        run_benchmark(
+            synthetic_wafers(1, seed=0, grid=16),
+            seeds=[0],
+            initial_measurements=4,
+            budget=4,
+            primary_metric="accuracy",
+        )
 
 
 def test_the_bias_parameters_are_recorded_and_shared(summary):

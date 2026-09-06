@@ -52,6 +52,46 @@ relative improvement = (baseline error − NANO error) / baseline error × 100
 Positive means NANO reconstructed the wafer more accurately than the baseline at equal cost.
 Negative means it did not, and the table prints that with the same prominence.
 
+### Why every improvement carries an interval
+
+A difference of means is not a result. Each arm is paired with NANO **episode by episode** — same
+wafer, same seed, same prior, same initial mask, so the difference within an episode isolates the
+selection rule — and the paired differences are bootstrapped (2000 resamples, seed recorded in the
+file) into a 95% interval.
+
+If that interval spans zero, the table prints **not separated** instead of a percentage, however
+good the mean looks. The win count is printed next to it, because "better on average" and "better on
+most wafers" are different claims and a benchmark should not let them be confused.
+
+### Why the primary metric is not plain MAE
+
+Most dies pass. On a wafer where 12% of dies fail, a predictor that answers *"no die fails"*
+everywhere and reads **no measurement at all** scores an excellent MAE — better than any strategy
+here. That is not a property of the strategies; it is class imbalance being scored as if it were
+knowledge.
+
+So the primary metric is **balanced MAE**: the mean of the error on failing dies and the error on
+passing dies. A predictor that knows nothing scores exactly `0.5` on it, whatever the failure rate.
+The criterion is that chance must look like chance — not that any particular arm wins.
+
+Plain MAE is still computed, still written into the results file, and still printed on this page in
+the second table. Where the two disagree, both are shown. Override the choice with
+`python -m nano.benchmark --metric mae`; the underlying per-episode numbers do not change, only
+which one leads.
+
+### The two rows that spend no budget
+
+Two predictors appear in the table marked *spends no budget*:
+
+| Reference | What it answers | Why it is there |
+| --- | --- | --- |
+| **Uncorrected prior** | The simulation prior, with no measurement applied | The floor the whole exercise is meant to beat |
+| **Constant** | `0.0` everywhere on a binary target — reads nothing | The trap plain MAE walks into, made visible instead of hidden |
+
+A selection rule that cannot beat a predictor which reads nothing has not earned the tool time it
+spent. Putting both in the same table as the strategies is the cheapest way to keep that check from
+being skipped.
+
 ## Measurements versus error
 
 <BenchmarkChart />
@@ -168,6 +208,11 @@ fails loudly on a malformed file rather than rendering something plausible.
 | `prior.initial_error` | recommended | Lets the site report how much prior error the correction removed |
 | `dataset.name` | recommended | Printed under the table as the wafer source |
 | `dataset.note` | when not WM-811K | A stand-in run writes a note here and the table prints it prominently |
+| `metric.key` | recommended | Which entry of `metrics` leads the table, the curve and every comparison |
+| `metrics` | for the second table | Every metric the run scored, with its name and scope |
+| `strategies.*.metrics` | for the second table | Per-arm values for each of those metrics |
+| `references` | recommended | The measurement-free rows: `prior` and `constant` |
+| `comparisons` | for the intervals | `comparisons[metric][arm]` — paired mean, 95% interval, win count and `separates` |
 
 The file the harness writes carries more than the minimum: `experiment.acquisition_rule` and
 `experiment.prior_bias` and `experiment.model` record the rule and the parameters that produced the

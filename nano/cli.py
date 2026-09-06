@@ -58,6 +58,15 @@ def add_experiment_args(parser: argparse.ArgumentParser) -> argparse.ArgumentPar
         help="model kernel length scale in die units (default: per-wafer, from wafer span)",
     )
     group.add_argument(
+        "--metric",
+        default=None,
+        help=(
+            "primary metric for the table, the curve and every comparison "
+            "(default: balanced_mae on a binary target, mae on a continuous one). "
+            "Every metric is reported either way"
+        ),
+    )
+    group.add_argument(
         "--prior-weight",
         type=float,
         default=0.5,

@@ -20,27 +20,29 @@ import numpy as np
 from nano.agent import EpisodeResult, draw_initial_mask, run_episode
 from nano.baselines import build_policies
 from nano.data import WaferRecord, summarise_patterns
+from nano.metrics import DEFAULT_PRIMARY, METRIC_LABELS, mae, metric_set, paired_bootstrap
 from nano.model import RealityModel, default_length_scale
 from nano.prior import BiasParams, make_biased_prior
 
 SCHEMA_VERSION = 1
-METRIC = {"name": "MAE", "direction": "lower_is_better", "unit": "failure probability"}
 DEFAULT_OUTPUT = Path("results/benchmark_summary.json")
 ACQUISITION_RULE = "uncertainty x simulation_disagreement x spatial_novelty"
+BOOTSTRAP_SEED = 0
+BOOTSTRAP_RESAMPLES = 2000
 
 
-def mae(prediction: np.ndarray, reality: np.ndarray) -> float:
-    """Reconstruction error over every in-wafer die. Lower is better."""
-    prediction = np.asarray(prediction, dtype=float)
-    reality = np.asarray(reality, dtype=float)
-    if prediction.shape != reality.shape:
-        raise ValueError("prediction and reality must cover the same dies")
-    return float(np.abs(prediction - reality).mean())
-
-
-def error_curve(episode: EpisodeResult, reality: np.ndarray) -> list[tuple[int, float]]:
-    """``(measurements, error)`` after every step of one episode."""
-    return [(step.measurements, mae(step.prediction, reality)) for step in episode.steps]
+def error_curve(
+    episode: EpisodeResult,
+    reality: np.ndarray,
+    *,
+    metric: str = "mae",
+    target_kind: str = "binary",
+) -> list[tuple[int, float]]:
+    """``(measurements, error)`` after every step of one episode, on one metric."""
+    return [
+        (step.measurements, metric_set(step.prediction, reality, target_kind)[metric])
+        for step in episode.steps
+    ]
 
 
 def run_benchmark(
@@ -52,6 +54,7 @@ def run_benchmark(
     bias: BiasParams | None = None,
     length_scale: float | None = None,
     prior_weight: float = 0.5,
+    primary_metric: str | None = None,
     dataset_block: dict | None = None,
 ) -> dict:
     """Run every strategy on every ``(wafer, seed)`` pair and summarise the result.
@@ -62,31 +65,51 @@ def run_benchmark(
     if not records:
         raise ValueError("no evaluation wafers were provided")
     bias = bias or BiasParams()
+    target_kind = records[0].target_kind
+    primary = primary_metric or DEFAULT_PRIMARY[target_kind]
+    if primary not in METRIC_LABELS:
+        raise ValueError(f"unknown metric {primary!r}; known: {sorted(METRIC_LABELS)}")
 
     curves: dict[str, dict[int, list[float]]] = defaultdict(lambda: defaultdict(list))
-    finals: dict[str, list[float]] = defaultdict(list)
+    scores: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     by_pattern: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
-    prior_errors: list[float] = []
     episodes: list[dict] = []
 
     for record in records:
+        if record.target_kind != target_kind:
+            raise ValueError("every evaluation wafer must carry the same target kind")
+
         prior = make_biased_prior(record, bias)
-        prior_error = mae(prior, record.reality)
         model_scale = (
             float(length_scale) if length_scale is not None else default_length_scale(record.coords)
         )
 
+        # Two predictors that spend no budget at all. They are not strategies —
+        # they ignore every measurement — but a selection rule that cannot beat
+        # them has not earned the tool time it spent, and on an imbalanced binary
+        # target the constant one is a genuinely hard MAE baseline.
+        references = {
+            "prior": prior,
+            "constant": np.full(record.n_dies, _constant_value(prior, target_kind)),
+        }
+        for name, prediction in references.items():
+            for metric, value in metric_set(prediction, record.reality, target_kind).items():
+                scores[name][metric].extend([value] * len(seeds))
+
         for seed in seeds:
             initial_mask = draw_initial_mask(record, initial_measurements, seed)
-            prior_errors.append(prior_error)
             entry = {
                 "wafer_id": record.wafer_id,
                 "pattern": record.pattern,
                 "seed": int(seed),
                 "n_dies": record.n_dies,
-                "prior_error": round(prior_error, 6),
+                "prior_error": round(scores["prior"][primary][0], 6),
                 "final": {},
             }
+            for name, prediction in references.items():
+                entry["final"][name] = round(
+                    metric_set(prediction, record.reality, target_kind)[primary], 6
+                )
 
             for name, policy in build_policies(budget, record.coords).items():
                 model = RealityModel(
@@ -101,10 +124,15 @@ def run_benchmark(
                     seed=seed,
                     model=model,
                 )
-                for measurements, value in error_curve(episode, record.reality):
+                for measurements, value in error_curve(
+                    episode, record.reality, metric=primary, target_kind=target_kind
+                ):
                     curves[name][measurements].append(value)
-                final = mae(episode.prediction, record.reality)
-                finals[name].append(final)
+                for metric, value in metric_set(
+                    episode.prediction, record.reality, target_kind
+                ).items():
+                    scores[name][metric].append(value)
+                final = scores[name][primary][-1]
                 by_pattern[name][record.pattern].append(final)
                 entry["final"][name] = round(final, 6)
 
@@ -115,7 +143,8 @@ def run_benchmark(
         strategies[name] = {
             "label": policy.label,
             "description": policy.description,
-            "final": _stats(finals[name]),
+            "final": _stats(scores[name][primary]),
+            "metrics": {metric: _stats(values) for metric, values in scores[name].items()},
             "curve": [
                 {"measurements": m, **_stats(curves[name][m])}
                 for m in sorted(curves[name])
@@ -125,6 +154,42 @@ def run_benchmark(
                 for pattern, values in sorted(by_pattern[name].items())
             },
         }
+
+    reference_block = {
+        "prior": {
+            "label": "Uncorrected prior",
+            "description": "the simulation prior, with no measurement applied",
+            "final": _stats(scores["prior"][primary]),
+            "metrics": {metric: _stats(values) for metric, values in scores["prior"].items()},
+        },
+        "constant": {
+            "label": "Constant",
+            "description": _constant_description(target_kind),
+            "final": _stats(scores["constant"][primary]),
+            "metrics": {metric: _stats(values) for metric, values in scores["constant"].items()},
+        },
+    }
+
+    # Every comparison is against NANO, over the episodes both arms ran, on every
+    # metric — so a claim that holds on one metric and fails on another cannot be
+    # reported as if it held on both.
+    comparisons: dict[str, dict[str, dict]] = {}
+    for metric in sorted(scores["nano"]):
+        per_metric = {}
+        for name in list(strategies) + list(reference_block):
+            if name == "nano" or metric not in scores[name]:
+                continue
+            values = np.asarray(scores[name][metric], dtype=float)
+            nano_values = np.asarray(scores["nano"][metric], dtype=float)
+            if np.isnan(values).any() or np.isnan(nano_values).any():
+                continue
+            per_metric[name] = paired_bootstrap(
+                values,
+                nano_values,
+                resamples=BOOTSTRAP_RESAMPLES,
+                seed=BOOTSTRAP_SEED,
+            ).as_dict()
+        comparisons[metric] = per_metric
 
     shapes = Counter(record.grid_shape for record in records)
     modal_shape, _ = shapes.most_common(1)[0]
@@ -157,9 +222,15 @@ def run_benchmark(
                 "prior_weight": round(float(prior_weight), 4),
             },
         },
-        "metric": dict(METRIC),
-        "prior": {"initial_error": _stats(prior_errors)},
+        "metric": {**METRIC_LABELS[primary], "key": primary, "direction": "lower_is_better"},
+        "metrics": {
+            key: {**METRIC_LABELS[key], "direction": "lower_is_better"}
+            for key in sorted(scores["nano"])
+        },
+        "prior": {"initial_error": _stats(scores["prior"][primary])},
         "strategies": strategies,
+        "references": reference_block,
+        "comparisons": comparisons,
         "episodes": episodes,
         "assets": {
             "error_curve": "results/error_curve.svg",
@@ -178,10 +249,31 @@ def relative_improvement(baseline: float, nano: float) -> float:
 
 
 def write_summary(summary: dict, path: Path | str = DEFAULT_OUTPUT) -> Path:
+    """Write the results file as JSON the site can actually parse.
+
+    A metric can legitimately have no value — a percentage improvement over a
+    baseline of exactly zero, for instance — and Python would happily write that
+    as a bare `NaN`, which is not JSON. Those become `null`, and `allow_nan=False`
+    makes any that slip through a loud failure here rather than a broken build
+    later.
+    """
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    out.write_text(json.dumps(json_safe(summary), indent=2, allow_nan=False) + "\n", encoding="utf-8")
     return out
+
+
+def json_safe(value):
+    """Replace every non-finite float with None, recursively."""
+    if isinstance(value, dict):
+        return {key: json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(item) for item in value]
+    if isinstance(value, float) and not np.isfinite(value):
+        return None
+    if isinstance(value, (np.floating, np.integer)):
+        return json_safe(value.item())
+    return value
 
 
 def _stats(values: Iterable[float]) -> dict[str, float]:
@@ -204,3 +296,20 @@ def _git_commit() -> str | None:
         return None
     commit = out.stdout.strip()
     return commit or None
+
+
+def _constant_value(prior: np.ndarray, target_kind: str) -> float:
+    """The value a measurement-free constant predictor answers everywhere.
+
+    Chosen without looking at reality: on a binary target it is "no die fails",
+    and on a continuous one it is the prior's own mean level.
+    """
+    if target_kind == "binary":
+        return 0.0
+    return float(np.mean(prior))
+
+
+def _constant_description(target_kind: str) -> str:
+    if target_kind == "binary":
+        return 'predicts 0.0 everywhere — "no die fails" — and reads no measurement'
+    return "predicts the prior's mean level everywhere and reads no measurement"
