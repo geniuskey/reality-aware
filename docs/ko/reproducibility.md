@@ -54,7 +54,7 @@ npm run sync:assets
 
 ### 플레이그라운드 다시 빌드하기
 
-[플레이그라운드](/playground.html?lang=ko)는 평가 웨이퍼 12장을 페이지 안에 싣고 있다. 따라서 소스나
+<PlaygroundLink>플레이그라운드</PlaygroundLink>는 평가 웨이퍼 12장을 페이지 안에 싣고 있다. 따라서 소스나
 게시된 결과가 바뀌면 로컬 데이터셋으로부터 다시 빌드해야 한다:
 
 ```bash

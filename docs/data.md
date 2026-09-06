@@ -17,7 +17,7 @@ Manufacturing, 2015.
 | Canonical distribution | [MIR Lab public datasets](http://mirlab.org/dataSet/public/) (`LSWMD.pkl`) |
 | Commonly used mirror | [Kaggle: WM-811K wafer map](https://www.kaggle.com/datasets/qingyi/wm811k-wafer-map) |
 | Terms of use | Set by the distributor, not by this project. Check the licence on the page you download from before redistributing. |
-| Included in this repository | **The raw distribution is never committed here.** The dataset is downloaded locally; what is versioned is a derived subset index, plus the twelve evaluation wafers embedded in the [playground](/playground.html) so it can run without a server — die coordinates and pass/fail labels for 18,241 dies, about 0.002% of the 811,457 maps. |
+| Included in this repository | **The raw distribution is never committed here.** The dataset is downloaded locally; what is versioned is a derived subset index, plus the twelve evaluation wafers embedded in the <PlaygroundLink>playground</PlaygroundLink> so it can run without a server — die coordinates and pass/fail labels for 18,241 dies, about 0.002% of the 811,457 maps. |
 
 ::: tip Implementation status
 The subset builder is `python -m nano.subset` and the harness is `python -m nano.benchmark`. Any

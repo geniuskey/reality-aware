@@ -6,7 +6,7 @@ description: A single NANO episode, step by step - biased prior, sparse start, t
 # Demo
 
 The figures on this page are a recording: one real episode, frozen. If you would rather drive the
-loop yourself, the [playground](/playground.html) re-runs it in your browser on the same twelve
+loop yourself, the <PlaygroundLink>playground</PlaygroundLink> re-runs it in your browser on the same twelve
 wafers — switch the terms of the acquisition rule on and off and watch the choices change.
 
 ::: tip Recorded from a real run

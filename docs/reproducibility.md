@@ -56,7 +56,7 @@ and reports what it did. Missing figures are not an error: pages render an expli
 
 ### Rebuilding the playground
 
-The [playground](/playground.html) carries the twelve evaluation wafers inside the page, so it has
+The <PlaygroundLink>playground</PlaygroundLink> carries the twelve evaluation wafers inside the page, so it has
 to be rebuilt from a local copy of the dataset whenever its source or the published results change:
 
 ```bash

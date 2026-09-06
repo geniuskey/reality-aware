@@ -91,7 +91,7 @@ Components render at build time, so the pages carry their content as static HTML
 disabled the prose, the tables, the wafer schematic and the result figures all still read; only
 Mermaid diagrams and the search box need the client runtime.
 
-The one exception is the [playground](/playground.html), which re-runs the loop in the browser and
+The one exception is the <PlaygroundLink>playground</PlaygroundLink>, which re-runs the loop in the browser and
 is therefore nothing without JavaScript. It is still a file, not a service: the twelve evaluation
 wafers and their priors are embedded in the page, so it fetches nothing at runtime either.
 

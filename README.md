@@ -8,7 +8,7 @@ valuable measurement to close the Sim2Real gap.
 Docs site: <https://geniuskey.github.io/reality-aware/> (Korean: <https://geniuskey.github.io/reality-aware/ko/>)
 
 Playground — run the loop on the real wafers, in a browser:
-<https://geniuskey.github.io/reality-aware/playground.html>
+<https://geniuskey.github.io/reality-aware/playground>
 
 ## Status
 

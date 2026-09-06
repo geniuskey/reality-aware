@@ -17,7 +17,7 @@ Ranking for Large-Scale Data Sets"*, IEEE Transactions on Semiconductor Manufact
 | 공식 배포처 | [MIR Lab public datasets](http://mirlab.org/dataSet/public/) (`LSWMD.pkl`) |
 | 널리 쓰이는 미러 | [Kaggle: WM-811K wafer map](https://www.kaggle.com/datasets/qingyi/wm811k-wafer-map) |
 | 이용 약관 | 이 프로젝트가 아니라 배포처가 정한다. 재배포하기 전에 내려받은 페이지의 라이선스를 반드시 확인하세요. |
-| 이 저장소에 포함된 것 | **원본 배포판은 이 저장소에 커밋되지 않는다.** 데이터셋은 로컬에서 내려받는다. 버전 관리 대상은 파생된 서브셋 인덱스, 그리고 서버 없이 실행되도록 [플레이그라운드](/playground.html?lang=ko)에 심어 둔 평가 웨이퍼 12장이다 — 다이 18,241개의 좌표와 양불 레이블로, 전체 811,457장 중 약 0.002%에 해당한다. |
+| 이 저장소에 포함된 것 | **원본 배포판은 이 저장소에 커밋되지 않는다.** 데이터셋은 로컬에서 내려받는다. 버전 관리 대상은 파생된 서브셋 인덱스, 그리고 서버 없이 실행되도록 <PlaygroundLink>플레이그라운드</PlaygroundLink>에 심어 둔 평가 웨이퍼 12장이다 — 다이 18,241개의 좌표와 양불 레이블로, 전체 811,457장 중 약 0.002%에 해당한다. |
 
 ::: tip 구현 상태
 서브셋 빌더는 `python -m nano.subset`, 하네스는 `python -m nano.benchmark`다. 아래에서

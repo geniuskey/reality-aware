@@ -24,12 +24,18 @@ const descriptionKo =
   '무엇을 모르는지 스스로 식별하고, Sim2Real 격차를 줄이는 데 가장 가치 있는 다음 측정을 선택하는 자율 계측 에이전트.'
 
 /**
- * The playground is a standalone page in `public/`, not a VitePress route. The
- * theme prepends the base to a root-relative link, and the page picks its own
- * language from the query string rather than from a locale directory.
+ * The playground is a standalone page in `public/`, not a VitePress route, so it
+ * is linked without the extension like every other entry in the nav: GitHub
+ * Pages and `docs:preview` both resolve `/playground` to `playground.html`, and
+ * the dev-server plugin below makes `docs:dev` agree with them. The theme
+ * prepends the base to a root-relative link, and the page picks its own language
+ * from the query string rather than from a locale directory.
+ *
+ * The SPA router has no chunk for that path; `theme/index.ts` hands clicks on it
+ * to the browser so the link behaves like any other.
  */
 const playgroundLink = (prefix: string) =>
-  `/playground.html${prefix === '/ko' ? '?lang=ko' : ''}`
+  `/playground${prefix === '/ko' ? '?lang=ko' : ''}`
 
 /** Nav and sidebar for one locale. `prefix` is '' for English, '/ko' for Korean. */
 function navigation(prefix: string, l: Record<string, string>) {
@@ -275,7 +281,23 @@ export default withMermaid(
         // only, so those chunks are never fetched by a visitor. Raise the limit
         // rather than warn about code nobody downloads.
         chunkSizeWarningLimit: 900
-      }
+      },
+      plugins: [
+        {
+          // `docs:dev` serves `public/` by exact filename, so it alone would 404
+          // on the extensionless playground link that works everywhere else.
+          name: 'playground-extensionless',
+          configureServer(server) {
+            server.middlewares.use((req, _res, next) => {
+              const [path, query] = (req.url ?? '').split('?')
+              if (path.endsWith('/playground')) {
+                req.url = `${path}.html${query ? `?${query}` : ''}`
+              }
+              next()
+            })
+          }
+        }
+      ]
     },
 
     mermaid: {
