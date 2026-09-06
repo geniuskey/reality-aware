@@ -5,7 +5,7 @@ valuable measurement to close the Sim2Real gap.
 
 **Maximize knowledge of reality per measurement.**
 
-Docs site: <https://geniuskey.github.io/reality-aware/>
+Docs site: <https://geniuskey.github.io/reality-aware/> (Korean: <https://geniuskey.github.io/reality-aware/ko/>)
 
 ## Status
 
@@ -54,7 +54,8 @@ published.
 
 | Path | Contents |
 | --- | --- |
-| `docs/` | Markdown pages, VitePress config, theme and Vue components |
+| `docs/` | English Markdown pages, VitePress config, theme and Vue components |
+| `docs/ko/` | Korean translation of every page |
 | `docs/public/` | Logo, favicon, social card, published result figures |
 | `results/` | Canonical benchmark output — `benchmark_summary.json` and generated figures |
 | `scripts/` | `sync-doc-assets.mjs`, social-card source |

@@ -2,6 +2,9 @@
 import { computed } from 'vue'
 import { data as benchmark } from '../../data/benchmark.data.mts'
 import MetricCard from './MetricCard.vue'
+import { useStrings } from '../i18n'
+
+const t = useStrings()
 
 /** Home-page evidence row. Same JSON as the benchmark page - one source, no drift. */
 const view = computed(() => {
@@ -38,55 +41,61 @@ const view = computed(() => {
   <section v-if="view" class="nano-evidence">
     <div class="nano-grid" data-cols="4">
       <MetricCard
-        label="NANO"
+        :label="t.evidence.nano"
         :value="view.nano"
         :std="view.nanoStd"
         :unit="view.unit"
         direction="down"
         tone="primary"
-        :hint="`Final ${view.metric} after the full budget`"
+        :hint="t.evidence.nanoHint(view.metric)"
       />
       <MetricCard
-        label="Random baseline"
+        :label="t.evidence.random"
         :value="view.random"
         :std="view.randomStd"
         :unit="view.unit"
         direction="down"
-        hint="Same budget, same initial observations"
+        :hint="t.evidence.randomHint"
       />
       <MetricCard
-        label="Grid baseline"
+        :label="t.evidence.grid"
         :value="view.grid"
         :std="view.gridStd"
         :unit="view.unit"
         direction="down"
-        hint="Spatially uniform selection"
+        :hint="t.evidence.gridHint"
       />
       <MetricCard
-        label="Prior error removed"
+        :label="t.evidence.priorDrop"
         :value="view.priorDrop !== null ? `${view.priorDrop.toFixed(1)}%` : null"
         tone="observed"
-        hint="Biased simulation prior vs corrected estimate"
+        :hint="t.evidence.priorDropHint"
       />
     </div>
     <p class="nano-note">
-      {{ view.wafers ?? '?' }} wafers &times; {{ view.seeds ?? '?' }} seeds &middot; measurement
-      budget {{ view.budget ?? '?' }} &middot; {{ view.metric }} &darr; lower is better &middot;
-      generated from <code>{{ benchmark.sourcePath }}</code>.
-      <a href="./benchmark">Full results &rarr;</a>
+      {{
+        t.evidence.footnote(
+          String(view.wafers ?? '?'),
+          String(view.seeds ?? '?'),
+          String(view.budget ?? '?'),
+          view.metric
+        )
+      }}
+      <code>{{ benchmark.sourcePath }}</code>.
+      <a href="./benchmark">{{ t.evidence.fullResults }}</a>
     </p>
   </section>
 
   <section v-else class="nano-empty">
-    <span class="nano-tag" data-kind="pending">Run benchmark to generate results</span>
+    <span class="nano-tag" data-kind="pending">{{ t.pending }}</span>
     <p>
-      This repository ships no pre-baked numbers. Once the benchmark writes
-      <code>{{ benchmark.sourcePath }}</code>, the headline metrics, the results table and the error
-      curve all render from that one file.
+      {{ t.evidence.emptyLead }}
+      <code>{{ benchmark.sourcePath }}</code> {{ t.evidence.emptyTail }}
     </p>
     <p class="nano-note">
-      Until then the honest answer is: unverified. See
-      <a href="./reproducibility">Reproduce</a> for how to produce the evidence.
+      {{ t.evidence.emptyNote }}
+      <a href="./reproducibility">{{ t.evidence.emptyNoteLink }}</a>
+      {{ t.evidence.emptyNoteTail }}
     </p>
   </section>
 </template>

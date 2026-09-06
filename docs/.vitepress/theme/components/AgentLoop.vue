@@ -1,34 +1,20 @@
 <script setup lang="ts">
-const steps = [
-  {
-    id: 'observe',
-    n: '01',
-    name: 'Observe',
-    tone: 'observed',
-    text: 'Read the sparse set of real measurements available so far, plus the simulation prior for every die.'
-  },
-  {
-    id: 'estimate',
-    n: '02',
-    name: 'Estimate',
-    tone: 'primary',
-    text: 'Fit a spatial model of reality and produce three maps: prediction, uncertainty, and prior-vs-reality gap.'
-  },
-  {
-    id: 'select',
-    n: '03',
-    name: 'Select',
-    tone: 'uncertain',
-    text: 'Score every unmeasured die with the acquisition function and pick the argmax as the next measurement.'
-  },
-  {
-    id: 'measure',
-    n: '04',
-    name: 'Measure',
-    tone: 'gap',
-    text: 'Reveal the hidden real value at that die, append it to the observation set, and spend one unit of budget.'
-  }
-]
+import { computed } from 'vue'
+import { useStrings } from '../i18n'
+
+const t = useStrings()
+
+const tones = ['observed', 'primary', 'uncertain', 'gap'] as const
+
+const steps = computed(() =>
+  t.value.loop.steps.map((step, i) => ({
+    id: tones[i],
+    n: String(i + 1).padStart(2, '0'),
+    tone: tones[i],
+    name: step.name,
+    text: step.text
+  }))
+)
 </script>
 
 <template>
@@ -42,8 +28,7 @@ const steps = [
     </ol>
     <p class="nano-loop__cycle">
       <span aria-hidden="true">↻</span>
-      Repeat until the measurement budget is exhausted. Every iteration is logged, so the decision
-      trace is auditable.
+      {{ t.loop.cycle }}
     </p>
   </div>
 </template>

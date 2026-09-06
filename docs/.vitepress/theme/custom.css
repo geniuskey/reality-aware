@@ -331,3 +331,31 @@ figure.nano-figure figcaption {
 .nano-diagram:empty {
   display: none;
 }
+
+/* Korean has no inter-word breaking opportunities the browser can see, so the
+   default `break-word` behaviour splits words down the middle ("AI 개 / 발").
+   `keep-all` breaks on spaces only, which is how Korean typography works.
+   Scoped to the locale so English hyphenation-free wrapping is untouched, and
+   lifted again for code, tables and diagrams where a long unbreakable token
+   would otherwise force a horizontal scrollbar. */
+html[lang='ko-KR'] .VPHero .name,
+html[lang='ko-KR'] .VPHero .text,
+html[lang='ko-KR'] .VPHero .tagline,
+html[lang='ko-KR'] .vp-doc h1,
+html[lang='ko-KR'] .vp-doc h2,
+html[lang='ko-KR'] .vp-doc h3,
+html[lang='ko-KR'] .vp-doc p,
+html[lang='ko-KR'] .vp-doc li,
+html[lang='ko-KR'] .vp-doc blockquote,
+html[lang='ko-KR'] .vp-doc td,
+html[lang='ko-KR'] .vp-doc th,
+html[lang='ko-KR'] .nano-panel,
+html[lang='ko-KR'] .nano-note,
+html[lang='ko-KR'] .nano-loop__text,
+html[lang='ko-KR'] .nano-wafer figcaption,
+html[lang='ko-KR'] .nano-table-caption,
+html[lang='ko-KR'] .nano-empty p,
+html[lang='ko-KR'] .VPFooter .message {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}

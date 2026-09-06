@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { data as benchmark } from '../../data/benchmark.data.mts'
+import { useStrings } from '../i18n'
+
+const t = useStrings()
 
 /**
  * Final-error table. Same JSON as BenchmarkChart, so the numbers cannot drift
@@ -53,17 +56,22 @@ const fmt = (v?: number | null, digits = 4) =>
     <div class="nano-table-scroll">
       <table>
         <caption class="nano-table-caption">
-          Final reconstruction {{ table.metric }} {{ table.direction }} after the full measurement
-          budget, averaged over {{ table.wafers ?? '?' }} wafers &times; {{ table.seeds ?? '?' }} seeds.
-          All strategies start from the same initial observations and spend the same budget.
+          {{
+            t.table.caption(
+              table.metric,
+              table.direction,
+              String(table.wafers ?? '?'),
+              String(table.seeds ?? '?')
+            )
+          }}
         </caption>
         <thead>
           <tr>
-            <th scope="col">Strategy</th>
-            <th scope="col">Selection rule</th>
-            <th scope="col">{{ table.metric }} mean {{ table.direction }}</th>
-            <th scope="col">&plusmn; std</th>
-            <th scope="col">Improvement vs NANO</th>
+            <th scope="col">{{ t.table.strategy }}</th>
+            <th scope="col">{{ t.table.rule }}</th>
+            <th scope="col">{{ t.table.mean(table.metric) }} {{ table.direction }}</th>
+            <th scope="col">{{ t.table.std }}</th>
+            <th scope="col">{{ t.table.improvement }}</th>
           </tr>
         </thead>
         <tbody>
@@ -73,10 +81,13 @@ const fmt = (v?: number | null, digits = 4) =>
             <td class="num">{{ fmt(row.mean) }}</td>
             <td class="num">{{ fmt(row.std) }}</td>
             <td class="num">
-              <template v-if="row.improvement === null">reference</template>
+              <template v-if="row.improvement === null">{{ t.table.reference }}</template>
               <template v-else>
-                {{ row.improvement > 0 ? 'NANO better by ' : 'NANO worse by ' }}
-                {{ Math.abs(row.improvement).toFixed(1) }}%
+                {{
+                  (row.improvement > 0 ? t.table.better : t.table.worse)(
+                    `${Math.abs(row.improvement).toFixed(1)}%`
+                  )
+                }}
               </template>
             </td>
           </tr>
@@ -85,24 +96,24 @@ const fmt = (v?: number | null, digits = 4) =>
     </div>
 
     <ul class="nano-table-meta">
-      <li>Initial measurements: <code>{{ table.initial ?? '—' }}</code></li>
-      <li>Additional measurement budget: <code>{{ table.budget ?? '—' }}</code></li>
+      <li>{{ t.table.metaInitial }}: <code>{{ table.initial ?? '—' }}</code></li>
+      <li>{{ t.table.metaBudget }}: <code>{{ table.budget ?? '—' }}</code></li>
       <li v-if="table.prior">
-        Simulation prior error before any correction:
+        {{ t.table.metaPrior }}:
         <code>{{ fmt(table.prior.mean) }}</code>
       </li>
-      <li v-if="table.commit">Commit: <code>{{ table.commit }}</code></li>
-      <li v-if="table.generated">Generated: <code>{{ table.generated }}</code></li>
-      <li>Source: <code>{{ benchmark.sourcePath }}</code></li>
+      <li v-if="table.commit">{{ t.table.metaCommit }}: <code>{{ table.commit }}</code></li>
+      <li v-if="table.generated">{{ t.table.metaGenerated }}: <code>{{ table.generated }}</code></li>
+      <li>{{ t.table.metaSource }}: <code>{{ benchmark.sourcePath }}</code></li>
     </ul>
   </div>
 
   <div v-else class="nano-empty">
-    <span class="nano-tag" data-kind="pending">Run benchmark to generate results</span>
+    <span class="nano-tag" data-kind="pending">{{ t.pending }}</span>
     <p>
-      No results table yet. Run the benchmark described on the
-      <a href="./reproducibility">Reproduce</a> page; it writes
-      <code>{{ benchmark.sourcePath }}</code> and this table fills itself in.
+      {{ t.table.emptyLead }}
+      <a href="./reproducibility">{{ t.table.emptyLink }}</a> {{ t.table.emptyTail }}
+      <code>{{ benchmark.sourcePath }}</code> {{ t.table.emptyTailEnd }}
     </p>
   </div>
 </template>

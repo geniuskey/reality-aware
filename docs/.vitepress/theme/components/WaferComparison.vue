@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useStrings } from '../i18n'
 
 /**
  * Four-panel wafer story.
@@ -17,6 +18,7 @@ const props = withDefaults(
   { grid: 17, seed: 20260906 }
 )
 
+const t = useStrings()
 const useImages = computed(() => !!props.images?.length)
 
 /* ---- deterministic field generation (identical on server and client) ---- */
@@ -147,8 +149,8 @@ const px = (i: number) => i * cellSize.value
 <template>
   <section class="nano-wafer" aria-labelledby="nano-wafer-heading">
     <header class="nano-wafer__head">
-      <h2 id="nano-wafer-heading" class="nano-wafer__title">One wafer, four states</h2>
-      <span v-if="!useImages" class="nano-tag" data-kind="conceptual">Conceptual illustration</span>
+      <h2 id="nano-wafer-heading" class="nano-wafer__title">{{ t.wafer.heading }}</h2>
+      <span v-if="!useImages" class="nano-tag" data-kind="conceptual">{{ t.conceptual }}</span>
     </header>
 
     <!-- Real experiment assets, once the benchmark has produced them. -->
@@ -168,7 +170,7 @@ const px = (i: number) => i * cellSize.value
         <svg
           viewBox="-3 -3 106 106"
           role="img"
-          aria-label="Biased simulation prior across the wafer: smooth everywhere and under-predicting the wafer edge."
+          :aria-label="t.wafer.panels[0].aria"
         >
           <rect class="nano-wafer__bg" x="0" y="0" width="100" height="100" />
           <rect
@@ -183,8 +185,8 @@ const px = (i: number) => i * cellSize.value
           />
         </svg>
         <figcaption>
-          <strong>1 · Biased Simulation Prior</strong>
-          <span>Smooth and confident everywhere. It under-predicts the wafer edge.</span>
+          <strong>{{ t.wafer.panels[0].title }}</strong>
+          <span>{{ t.wafer.panels[0].caption }}</span>
         </figcaption>
       </figure>
 
@@ -192,7 +194,7 @@ const px = (i: number) => i * cellSize.value
         <svg
           viewBox="-3 -3 106 106"
           role="img"
-          aria-label="Sparse measurements: a small number of measured dies, clustered near the wafer centre."
+          :aria-label="t.wafer.panels[1].aria"
         >
           <rect class="nano-wafer__bg" x="0" y="0" width="100" height="100" />
           <rect
@@ -216,11 +218,8 @@ const px = (i: number) => i * cellSize.value
           />
         </svg>
         <figcaption>
-          <strong>2 · Sparse Measurements</strong>
-          <span>
-            {{ model.observed.length }} of {{ model.cells.length }} dies measured, and the sample is
-            centre-biased.
-          </span>
+          <strong>{{ t.wafer.panels[1].title }}</strong>
+          <span>{{ t.wafer.panels[1].caption(model.observed.length, model.cells.length) }}</span>
         </figcaption>
       </figure>
 
@@ -228,7 +227,7 @@ const px = (i: number) => i * cellSize.value
         <svg
           viewBox="-3 -3 106 106"
           role="img"
-          aria-label="Predicted reality: the prior corrected towards the measurements, sharpening near the wafer edge."
+          :aria-label="t.wafer.panels[2].aria"
         >
           <rect class="nano-wafer__bg" x="0" y="0" width="100" height="100" />
           <rect
@@ -254,8 +253,8 @@ const px = (i: number) => i * cellSize.value
           />
         </svg>
         <figcaption>
-          <strong>3 · Predicted Reality</strong>
-          <span>Prior pulled towards measured evidence. White outlines mark measured dies.</span>
+          <strong>{{ t.wafer.panels[2].title }}</strong>
+          <span>{{ t.wafer.panels[2].caption }}</span>
         </figcaption>
       </figure>
 
@@ -263,7 +262,7 @@ const px = (i: number) => i * cellSize.value
         <svg
           viewBox="-3 -3 106 106"
           role="img"
-          aria-label="Uncertainty map with the recommended next die marked by a crosshair in the least-known region."
+          :aria-label="t.wafer.panels[3].aria"
         >
           <rect class="nano-wafer__bg" x="0" y="0" width="100" height="100" />
           <rect
@@ -288,24 +287,23 @@ const px = (i: number) => i * cellSize.value
           </g>
         </svg>
         <figcaption>
-          <strong>4 · Recommended Next Die</strong>
-          <span>Highest acquisition score: unknown <em>and</em> in disagreement with the prior.</span>
+          <strong>{{ t.wafer.panels[3].title }}</strong>
+          <span v-html="t.wafer.panels[3].captionHtml"></span>
         </figcaption>
       </figure>
     </div>
 
     <ul v-if="!useImages" class="nano-wafer__legend">
-      <li><span class="swatch" data-s="observed">&#9679;</span> Measured die (observed)</li>
-      <li><span class="swatch" data-s="unobserved">&#9675;</span> Unmeasured die (hidden from agent)</li>
-      <li><span class="swatch" data-s="prior">&#9638;</span> Prior scale &middot; violet, low &rarr; high</li>
-      <li><span class="swatch" data-s="pred">&#9638;</span> Prediction scale &middot; cyan, low &rarr; high</li>
-      <li><span class="swatch" data-s="unc">&#9638;</span> Uncertainty scale &middot; amber, certain &rarr; unknown</li>
-      <li><span class="swatch" data-s="next">&#10011;</span> Recommended next measurement</li>
+      <li><span class="swatch" data-s="observed">&#9679;</span> {{ t.wafer.legend[0] }}</li>
+      <li><span class="swatch" data-s="unobserved">&#9675;</span> {{ t.wafer.legend[1] }}</li>
+      <li><span class="swatch" data-s="prior">&#9638;</span> {{ t.wafer.legend[2] }}</li>
+      <li><span class="swatch" data-s="pred">&#9638;</span> {{ t.wafer.legend[3] }}</li>
+      <li><span class="swatch" data-s="unc">&#9638;</span> {{ t.wafer.legend[4] }}</li>
+      <li><span class="swatch" data-s="next">&#10011;</span> {{ t.wafer.legend[5] }}</li>
     </ul>
 
     <p v-if="!useImages" class="nano-note">
-      Schematic only. These fields come from a deterministic formula inside this page, written to
-      explain the loop. They are not WM-811K wafers and not benchmark output.
+      {{ t.wafer.note }}
     </p>
   </section>
 </template>

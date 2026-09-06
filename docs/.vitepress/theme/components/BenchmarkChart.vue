@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { data as benchmark } from '../../data/benchmark.data.mts'
+import { useStrings } from '../i18n'
+
+const t = useStrings()
 
 /**
  * Measurements vs reconstruction error, drawn from results/benchmark_summary.json.
@@ -80,7 +83,7 @@ const chart = computed(() => {
     <svg
       :viewBox="`0 0 ${W} ${chart.H}`"
       role="img"
-      :aria-label="`Reconstruction ${chart.metric} against the number of measurements for each selection strategy. Lower is better.`"
+      :aria-label="t.chart.aria(chart.metric)"
     >
       <g class="nano-chart__grid">
         <line
@@ -123,7 +126,7 @@ const chart = computed(() => {
           {{ Math.round(tick.v) }}
         </text>
         <text :x="PAD.left" :y="chart.H - 8" text-anchor="start" class="nano-chart__axis-title">
-          Measurements used
+          {{ t.chart.xTitle }}
         </text>
         <text
           :x="-(chart.H / 2)"
@@ -169,21 +172,20 @@ const chart = computed(() => {
       </g>
     </svg>
     <figcaption>
-      Reconstruction {{ chart.metric }} {{ chart.direction }} against measurement count. Shaded bands
-      show &plusmn;1 standard deviation across seeds. The y-axis starts at zero. Generated from
+      {{ t.chart.caption(chart.metric, chart.direction) }}
       <code>{{ benchmark.sourcePath }}</code>.
     </figcaption>
   </figure>
 
   <div v-else class="nano-empty">
-    <span class="nano-tag" data-kind="pending">Run benchmark to generate results</span>
+    <span class="nano-tag" data-kind="pending">{{ t.pending }}</span>
     <p>
-      No error curve yet. This chart renders once
-      <code>{{ benchmark.sourcePath }}</code> contains per-strategy <code>curve</code> arrays.
+      {{ t.chart.emptyLead }}
+      <code>{{ benchmark.sourcePath }}</code> {{ t.chart.emptyTail }} <code>curve</code>
+      {{ t.chart.emptyTailEnd }}
     </p>
     <p class="nano-note">
-      The site deliberately ships with no placeholder numbers, so nothing here can be mistaken for a
-      measured result.
+      {{ t.chart.emptyNote }}
     </p>
   </div>
 </template>

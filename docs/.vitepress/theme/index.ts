@@ -15,6 +15,8 @@ export default {
   extends: DefaultTheme,
   Layout: () =>
     h(DefaultTheme.Layout, null, {
+      // The team and event names are proper nouns, so this line is identical
+      // in both locales.
       'home-hero-before': () =>
         h('p', { class: 'nano-hero-eyebrow' }, 'Team NANO · AI Development Lifecycle Hackathon')
     }),

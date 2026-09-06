@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { withBase } from 'vitepress'
 import { data as assets } from '../../data/assets.data.mts'
+import { useStrings } from '../i18n'
 
 /**
  * Renders a figure produced by the benchmark, or an explicit pending state when
@@ -16,6 +17,8 @@ const props = defineProps<{
   producedBy?: string
 }>()
 
+const t = useStrings()
+
 const exists = computed(() => assets.files.includes(props.file))
 const src = computed(() => withBase(`/results/${props.file}`))
 const isVideo = computed(() => /\.(mp4|webm)$/i.test(props.file))
@@ -29,17 +32,18 @@ const isVideo = computed(() => /\.(mp4|webm)$/i.test(props.file))
       <strong>{{ title }}</strong> — {{ caption }}
       <span class="nano-asset__src">
         <code>{{ assets.dir }}/{{ file }}</code><template v-if="producedBy">
-          · produced by <code>{{ producedBy }}</code></template>
+          · {{ t.asset.producedBy }} <code>{{ producedBy }}</code></template>
       </span>
     </figcaption>
   </figure>
 
   <div v-else class="nano-empty">
-    <span class="nano-tag" data-kind="pending">Run benchmark to generate results</span>
+    <span class="nano-tag" data-kind="pending">{{ t.pending }}</span>
     <p><strong>{{ title }}</strong> — {{ caption }}</p>
     <p class="nano-note">
-      Expected at <code>{{ assets.dir }}/{{ file }}</code><template v-if="producedBy">, produced by
-      <code>{{ producedBy }}</code></template>. Nothing is drawn until the real figure exists.
+      {{ t.asset.expectedAt }}: <code>{{ assets.dir }}/{{ file }}</code><template v-if="producedBy">,
+      {{ t.asset.expectedProducedBy }} <code>{{ producedBy }}</code></template>.
+      {{ t.asset.nothingDrawn }}
     </p>
   </div>
 </template>

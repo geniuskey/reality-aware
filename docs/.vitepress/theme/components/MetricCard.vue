@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useStrings } from '../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -16,10 +17,12 @@ const props = withDefaults(
   { tone: 'neutral', precision: 4, direction: null }
 )
 
+const t = useStrings()
+
 const hasValue = computed(() => props.value !== null && props.value !== undefined)
 
 const display = computed(() => {
-  if (!hasValue.value) return 'not measured'
+  if (!hasValue.value) return t.value.notMeasured
   if (typeof props.value === 'string') return props.value
   return props.value.toFixed(props.precision)
 })
@@ -29,8 +32,8 @@ const spread = computed(() =>
 )
 
 const directionText = computed(() => {
-  if (props.direction === 'down') return '↓ lower is better'
-  if (props.direction === 'up') return '↑ higher is better'
+  if (props.direction === 'down') return t.value.lowerIsBetter
+  if (props.direction === 'up') return t.value.higherIsBetter
   return null
 })
 </script>
