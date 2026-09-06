@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="NANO logo: a wafer with a measurement crosshair">
+  <defs>
+    <clipPath id="nano-wafer-clip">
+      <circle cx="24" cy="24" r="19" />
+    </clipPath>
+  </defs>
+  <circle cx="24" cy="24" r="19" fill="none" stroke="#2ec4d6" stroke-width="2.2" />
+  <g clip-path="url(#nano-wafer-clip)" stroke="#2ec4d6" stroke-width="0.9" opacity="0.55">
+    <path d="M10 5V43M17 5V43M24 5V43M31 5V43M38 5V43" />
+    <path d="M5 10H43M5 17H43M5 24H43M5 31H43M5 38H43" />
+  </g>
+  <rect x="31" y="10" width="7" height="7" fill="#8b7fd4" opacity="0.85" />
+  <g stroke="#e5675b" stroke-width="1.8" fill="none">
+    <circle cx="17.5" cy="31.5" r="5" />
+    <path d="M17.5 24v4M17.5 35v4M10 31.5h4M21 31.5h4" />
+  </g>
+</svg>

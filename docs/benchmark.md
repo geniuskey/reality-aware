@@ -1,0 +1,161 @@
+---
+title: Benchmark
+description: NANO against Random and Grid selection under an identical measurement budget, identical initial observations and identical wafers, scored against hidden ground truth.
+---
+
+# Benchmark
+
+Every figure and every number on this page is rendered from one file,
+`results/benchmark_summary.json`. Nothing here is typed into Markdown by hand, so the table, the
+chart and the home page cannot disagree with each other.
+
+::: warning Implementation status
+The benchmark has **not been run in this repository yet**, so `results/benchmark_summary.json` does
+not exist and every result block below reports that honestly. It will populate itself the moment the
+file appears. See [Reproduce](./reproducibility).
+:::
+
+## What is being compared
+
+All three arms receive the same wafers, the same seeds, the same initial observation mask and the
+same additional measurement budget. The **only** difference is which die each one picks next.
+
+| Strategy | Selection rule |
+| --- | --- |
+| **Random** | Uniformly sample an unmeasured die |
+| **Grid** | Pick the unmeasured die closest to the next point on a spatially uniform lattice |
+| **NANO** | Pick the unmeasured die with the highest acquisition score |
+
+A fair comparison here is a matter of protocol, not of intent: if NANO started from a different
+initial mask or spent a larger budget, any improvement would be uninterpretable.
+
+## Headline results
+
+<BenchmarkTable />
+
+### How relative improvement is defined
+
+```text
+relative improvement = (baseline error − NANO error) / baseline error × 100
+```
+
+Positive means NANO reconstructed the wafer more accurately than the baseline at equal cost.
+Negative means it did not, and the table prints that with the same prominence.
+
+## Measurements versus error
+
+<BenchmarkChart />
+
+The interesting part of this curve is its shape, not just its endpoint. A selection rule that is
+merely lucky converges at the same rate as Random and separates only at the end. A rule that is
+genuinely choosing informative locations should separate early, while budget still remains.
+
+## Prior versus corrected reconstruction
+
+<ResultAsset
+  file="wafer_comparison.webp"
+  title="Prior → reconstruction → ground truth"
+  caption="One wafer shown as biased prior, NANO reconstruction, and hidden ground truth on a common scale."
+  producedBy="scripts/plot_wafer_comparison" />
+
+## Uncertainty before and after
+
+<ResultAsset
+  file="uncertainty_before_after.webp"
+  title="Uncertainty map, start versus end of budget"
+  caption="Where the agent knew it was blind at the start, and what remained unknown after the budget was spent."
+  producedBy="scripts/plot_uncertainty" />
+
+Uncertainty and prediction are drawn on deliberately different colour scales. They answer different
+questions and should never be read off the same legend.
+
+## Per-wafer improvement
+
+<ResultAsset
+  file="paired_improvement.svg"
+  title="Paired improvement distribution"
+  caption="Per-wafer difference between NANO and each baseline, so wins and losses are both visible rather than averaged away."
+  producedBy="scripts/plot_paired_improvement" />
+
+A mean improvement can hide a rule that helps most wafers a little and hurts a few a lot. The paired
+distribution is the figure that would expose that, which is why it is here rather than a single bar.
+
+## Where NANO fails
+
+::: warning Not yet answered
+This section stays empty until the benchmark has actually run. It will record, from the results
+file and not from expectation:
+
+- failure patterns where NANO does not beat Random or Grid,
+- budgets at which the advantage disappears,
+- wafers where the biased prior was accidentally close to reality, so correction had nothing to do,
+- variance across seeds large enough to make the mean uninformative.
+
+If NANO loses on a pattern class, that belongs here in full, not in a footnote.
+:::
+
+## Results file schema
+
+`results/benchmark_summary.json` is the single source of truth. The site validates it on build and
+fails loudly on a malformed file rather than rendering something plausible.
+
+```json
+{
+  "schema_version": 1,
+  "generated_at": "2026-01-01T00:00:00Z",
+  "git_commit": "<short sha of the run>",
+  "dataset": {
+    "name": "WM-811K",
+    "subset_file": "<path to the versioned subset index>",
+    "n_wafers": 0
+  },
+  "experiment": {
+    "seeds": [0, 1, 2],
+    "initial_measurements": 0,
+    "measurement_budget": 0,
+    "grid_shape": [0, 0]
+  },
+  "metric": {
+    "name": "MAE",
+    "direction": "lower_is_better",
+    "unit": "failure probability"
+  },
+  "prior": { "initial_error": { "mean": 0.0, "std": 0.0 } },
+  "strategies": {
+    "nano": {
+      "label": "NANO",
+      "description": "highest acquisition score",
+      "final": { "mean": 0.0, "std": 0.0 },
+      "curve": [{ "measurements": 0, "mean": 0.0, "std": 0.0 }]
+    },
+    "random": {
+      "label": "Random",
+      "description": "uniform over unmeasured dies",
+      "final": { "mean": 0.0, "std": 0.0 },
+      "curve": []
+    },
+    "grid": {
+      "label": "Grid",
+      "description": "spatially uniform lattice",
+      "final": { "mean": 0.0, "std": 0.0 },
+      "curve": []
+    }
+  },
+  "assets": { "error_curve": "results/error_curve.svg" }
+}
+```
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `schema_version` | yes | Build fails without it |
+| `strategies` | yes | Keys `nano`, `random`, `grid` get dedicated colours and line styles |
+| `strategies.*.final` | yes | Drives the table and the home-page metric cards |
+| `strategies.*.curve` | for the chart | Omit it and the chart shows its pending state; the table still renders |
+| `metric.direction` | recommended | Controls the `↓` / `↑` marker printed next to every metric |
+| `prior.initial_error` | recommended | Lets the site report how much prior error the correction removed |
+
+Figures referenced by [ResultAsset](./architecture) are read from `docs/public/results/`. The sync
+script copies them there from the canonical `results/` directory — see
+[Reproduce](./reproducibility).
+
+Next: [walk through a single run →](./demo)

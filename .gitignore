@@ -1,0 +1,28 @@
+# node
+node_modules/
+
+# vitepress
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# experiment output (regenerate with the benchmark; only the summary is committed)
+results/*
+!results/.gitkeep
+!results/benchmark_summary.json
+
+# site copies of published figures (regenerate with `npm run sync:assets`)
+docs/public/results/*
+!docs/public/results/.gitkeep
+
+# raw datasets are never committed
+data/raw/
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# editors / os
+.DS_Store
+Thumbs.db

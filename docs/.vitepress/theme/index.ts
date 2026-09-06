@@ -1,0 +1,30 @@
+import { h } from 'vue'
+import type { Theme } from 'vitepress'
+import DefaultTheme from 'vitepress/theme'
+import './custom.css'
+
+import AgentLoop from './components/AgentLoop.vue'
+import BenchmarkChart from './components/BenchmarkChart.vue'
+import BenchmarkTable from './components/BenchmarkTable.vue'
+import EvidenceStrip from './components/EvidenceStrip.vue'
+import MetricCard from './components/MetricCard.vue'
+import ResultAsset from './components/ResultAsset.vue'
+import WaferComparison from './components/WaferComparison.vue'
+
+export default {
+  extends: DefaultTheme,
+  Layout: () =>
+    h(DefaultTheme.Layout, null, {
+      'home-hero-before': () =>
+        h('p', { class: 'nano-hero-eyebrow' }, 'Team NANO · AI Development Lifecycle Hackathon')
+    }),
+  enhanceApp({ app }) {
+    app.component('AgentLoop', AgentLoop)
+    app.component('BenchmarkChart', BenchmarkChart)
+    app.component('BenchmarkTable', BenchmarkTable)
+    app.component('EvidenceStrip', EvidenceStrip)
+    app.component('MetricCard', MetricCard)
+    app.component('ResultAsset', ResultAsset)
+    app.component('WaferComparison', WaferComparison)
+  }
+} satisfies Theme

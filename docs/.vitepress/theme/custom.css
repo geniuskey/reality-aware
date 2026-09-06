@@ -1,0 +1,333 @@
+/* ==========================================================================
+   NANO design system
+   Precise, technical, calm — a semiconductor metrology dashboard.
+   Tokens are defined for both light and dark; state is never encoded by
+   colour alone (every legend pairs colour with a label and a symbol).
+   ========================================================================== */
+
+:root {
+  --nano-font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --nano-font-mono: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo,
+    Consolas, 'Liberation Mono', monospace;
+
+  /* light palette (default) */
+  --nano-bg: #f5f7fa;
+  --nano-surface: #ffffff;
+  --nano-surface-2: #eef2f7;
+  --nano-border: #d3dce6;
+  --nano-text: #16202c;
+  --nano-text-dim: #5b6b7d;
+
+  --nano-primary: #0d7f90;
+  --nano-primary-soft: rgba(13, 127, 144, 0.12);
+  --nano-secondary: #5b4fb0;
+  --nano-secondary-soft: rgba(91, 79, 176, 0.12);
+  --nano-observed: #1f8a5b;
+  --nano-observed-soft: rgba(31, 138, 91, 0.14);
+  --nano-uncertain: #96650a;
+  --nano-uncertain-soft: rgba(150, 101, 10, 0.14);
+  --nano-gap: #c0392b;
+  --nano-gap-soft: rgba(192, 57, 43, 0.12);
+
+  --nano-radius: 10px;
+  --nano-shadow: 0 1px 2px rgba(16, 32, 48, 0.06), 0 8px 24px rgba(16, 32, 48, 0.06);
+
+  /* VitePress brand mapping */
+  --vp-c-brand-1: var(--nano-primary);
+  --vp-c-brand-2: #0b6f7e;
+  --vp-c-brand-3: #0a5f6c;
+  --vp-c-brand-soft: var(--nano-primary-soft);
+  --vp-font-family-base: var(--nano-font-sans);
+  --vp-font-family-mono: var(--nano-font-mono);
+}
+
+.dark {
+  --nano-bg: #0b1017;
+  --nano-surface: #131c28;
+  --nano-surface-2: #18232f;
+  --nano-border: #263442;
+  --nano-text: #dce6f1;
+  --nano-text-dim: #8fa3b8;
+
+  --nano-primary: #45d2e3;
+  --nano-primary-soft: rgba(69, 210, 227, 0.14);
+  --nano-secondary: #a99bf0;
+  --nano-secondary-soft: rgba(169, 155, 240, 0.14);
+  --nano-observed: #52d191;
+  --nano-observed-soft: rgba(82, 209, 145, 0.16);
+  --nano-uncertain: #e7b155;
+  --nano-uncertain-soft: rgba(231, 177, 85, 0.16);
+  --nano-gap: #f0796c;
+  --nano-gap-soft: rgba(240, 121, 108, 0.16);
+
+  --nano-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.28);
+
+  --vp-c-brand-1: var(--nano-primary);
+  --vp-c-brand-2: #2fbccd;
+  --vp-c-brand-3: #22a3b3;
+  --vp-c-brand-soft: var(--nano-primary-soft);
+
+  --vp-c-bg: var(--nano-bg);
+  --vp-c-bg-alt: #0e151e;
+  --vp-c-bg-soft: var(--nano-surface);
+  --vp-c-bg-elv: var(--nano-surface);
+  --vp-c-divider: var(--nano-border);
+  --vp-c-border: var(--nano-border);
+}
+
+/* ----- Hero -------------------------------------------------------------- */
+
+.VPHero .name,
+.VPHero .text {
+  letter-spacing: -0.02em;
+}
+
+.VPHero .name {
+  font-size: clamp(3rem, 9vw, 5.5rem);
+  background: -webkit-linear-gradient(
+    120deg,
+    var(--nano-primary) 20%,
+    var(--nano-secondary)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Keep the hierarchy NANO > subtitle > tagline; the default theme sizes the
+   subtitle almost as large as the name. */
+.VPHero .text {
+  font-size: clamp(1.5rem, 3.2vw, 2.25rem);
+  line-height: 1.25;
+  max-width: 30ch;
+}
+
+.VPHero .tagline {
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  max-width: 62ch;
+}
+
+.VPHero .main {
+  max-width: 100%;
+}
+
+/* Keyboard focus must stay visible everywhere. */
+:is(a, button, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--nano-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The bundled DocSearch stylesheet sets its own focus ring on the search
+   button, which resolves to the browser default and is nearly invisible on the
+   dark navbar. Name the class so keyboard users get the same cyan ring here. */
+.VPNavBarSearch .DocSearch-Button:focus-visible,
+.DocSearch-Button:focus-visible {
+  outline: 2px solid var(--nano-primary);
+  outline-offset: 2px;
+}
+
+/* ----- Shared primitives ------------------------------------------------- */
+
+.nano-eyebrow {
+  font-family: var(--nano-font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nano-text-dim);
+}
+
+.nano-panel {
+  background: var(--nano-surface);
+  border: 1px solid var(--nano-border);
+  border-radius: var(--nano-radius);
+  padding: 1.25rem;
+}
+
+.nano-grid {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.nano-grid[data-cols='2'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.nano-grid[data-cols='3'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.nano-grid[data-cols='4'] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 900px) {
+  .nano-grid[data-cols='3'],
+  .nano-grid[data-cols='4'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .nano-grid[data-cols='2'],
+  .nano-grid[data-cols='3'],
+  .nano-grid[data-cols='4'] { grid-template-columns: minmax(0, 1fr); }
+}
+
+.nano-note {
+  border-left: 3px solid var(--nano-border);
+  padding: 0.35rem 0 0.35rem 0.9rem;
+  color: var(--nano-text-dim);
+  font-size: 0.9rem;
+}
+
+figure.nano-figure {
+  margin: 1.75rem 0;
+}
+
+figure.nano-figure figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--nano-text-dim);
+}
+
+.nano-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--nano-font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--nano-border);
+  color: var(--nano-text-dim);
+  white-space: nowrap;
+}
+
+.nano-tag[data-kind='hidden'] {
+  color: var(--nano-gap);
+  border-color: var(--nano-gap);
+  background: var(--nano-gap-soft);
+}
+
+.nano-tag[data-kind='conceptual'] {
+  color: var(--nano-secondary);
+  border-color: var(--nano-secondary);
+  background: var(--nano-secondary-soft);
+}
+
+.nano-tag[data-kind='pending'] {
+  color: var(--nano-uncertain);
+  border-color: var(--nano-uncertain);
+  background: var(--nano-uncertain-soft);
+}
+
+/* Metric direction markers, e.g. "MAE ↓" */
+.nano-metric-dir {
+  font-family: var(--nano-font-mono);
+  color: var(--nano-text-dim);
+}
+
+/* Tables scroll horizontally on narrow screens without losing the first column. */
+.vp-doc table {
+  display: table;
+  width: 100%;
+  margin: 1.25rem 0;
+}
+
+.vp-doc div:has(> table) {
+  overflow-x: auto;
+}
+
+.vp-doc th {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--nano-text-dim);
+}
+
+.vp-doc td:first-child {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Mermaid diagrams: centre, allow horizontal scroll, never overflow the page. */
+/* Diagram panels stay on a fixed dark ground in both themes. Mermaid computes
+   its own node colours, so letting the panel flip would leave a light-mode
+   diagram with dark boxes on white - readable, but jarring and inconsistent. */
+.nano-diagram {
+  margin: 1.75rem 0;
+  padding: 1rem;
+  background: #0f1823;
+  border: 1px solid #263442;
+  border-radius: var(--nano-radius);
+  overflow-x: auto;
+  text-align: center;
+}
+
+.nano-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ----- Home-page primitives --------------------------------------------- */
+
+.nano-hero-eyebrow {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 3rem 24px 0;
+  font-family: var(--nano-font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nano-text-dim);
+}
+
+@media (min-width: 640px) {
+  .nano-hero-eyebrow { padding-left: 48px; padding-right: 48px; }
+}
+
+@media (min-width: 960px) {
+  .nano-hero-eyebrow { padding: 4rem 64px 0; }
+}
+
+.nano-panel h3 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 1rem;
+  line-height: 1.35;
+  border: 0;
+  padding: 0;
+}
+
+.nano-panel p:last-child {
+  margin-bottom: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--nano-text-dim);
+}
+
+.nano-cta {
+  display: inline-block;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--nano-primary);
+  background: var(--nano-primary-soft);
+  color: var(--vp-c-brand-1) !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none !important;
+  transition: background-color 0.2s;
+}
+
+.nano-cta:hover {
+  background: var(--vp-c-brand-1);
+  color: var(--nano-bg) !important;
+}
+
+/* On the home page the sidebar is hidden by the home layout; keep the doc
+   pages readable at every width. */
+.vp-doc h2 {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+}
+
+/* Mermaid renders client-side, so the container is empty in the static HTML.
+   Collapse it rather than showing an empty framed box with JavaScript off —
+   every diagram on this site is followed by a text description of the chain. */
+.nano-diagram:empty {
+  display: none;
+}
