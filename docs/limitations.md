@@ -26,12 +26,16 @@ thickness, overlay — with tool-dependent measurement error.
 `--target continuous` runs the whole pipeline against a smooth, noisy stand-in field instead, and it
 changes two conclusions rather than confirming them:
 
-- **The selection rule does better, not worse.** NANO separates from Random by 16.9% [12.1, 21.5] and
-  from Grid by 10.0% [6.2, 13.5], where on the binary target it does not separate from Random at all.
-- **The ablation reverses.** The full three-term rule beats every reduced one, including the
-  `uncertainty × disagreement` rule that beats it on the binary target. Whether the novelty term
-  earns its place depends on which target it is asked about — so neither answer transfers, and the
-  one measured on binary labels is the weaker of the two proxies for metrology.
+Measured over 60 episodes (12 stand-in wafers × 5 seeds, the published configuration):
+
+- **The selection rule does better, not worse.** NANO separates from Random by 18.7% [15.4, 21.9] and
+  from Grid by 8.8% [6.3, 11.3]. On the binary target it does not separate from Random on plain MAE
+  at all.
+- **The ablation reverses.** Dropping the novelty term now *costs* 7.8% [6.2, 9.3] where on the
+  binary target it *gained* 6.9%. Uncertainty alone ties with the full rule rather than beating it.
+  Whether the novelty term earns its place depends on which target it is asked about — so neither
+  answer transfers, and the one measured on binary labels is the weaker of the two proxies for
+  metrology.
 
 Both runs are on stand-in wafers. What they establish together is narrower than either alone: the
 selection rule's advantage is target-dependent, and this project has not measured it on real
