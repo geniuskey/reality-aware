@@ -9,10 +9,12 @@ Every figure and every number on this page is rendered from one file,
 `results/benchmark_summary.json`. Nothing here is typed into Markdown by hand, so the table, the
 chart and the home page cannot disagree with each other.
 
-::: warning No published run yet
-The harness is implemented (`python -m nano.benchmark`), but no run against WM-811K is published
-here, so `results/benchmark_summary.json` does not exist and every result block below reports that
-honestly. It populates itself the moment the file appears.
+::: tip Published run — WM-811K, 12 wafers × 5 seeds
+Written by `python -m nano.benchmark --ablation` against a local copy of WM-811K. The dataset is not
+committed; `data/subsets/wm811k_eval.json` names the twelve wafers, so the evaluation set can be
+rebuilt exactly. Two things below are worth knowing before reading the rest: NANO separates from
+Random and Grid on the primary metric and **not** on plain MAE, and the ablation finds a reduced rule
+beating the published one.
 
 A results file is committed only for a run against the dataset. A run on generated stand-in wafers
 (`--synthetic`) produces the same file locally and is labelled as such — the table prints the wafer
@@ -111,16 +113,33 @@ same initial observations, only the terms differ.
 
 This is the table most likely to embarrass the rest of this site, which is exactly why it is here
 rather than in a notebook. A reduced rule that beats the published one means the term it dropped is
-costing accuracy, not buying it; the published rule stays what the [approach page](./approach)
-documents until a run on WM-811K says otherwise, and `--terms` runs any subset in the meantime.
+costing accuracy rather than buying it — and on this run one does: `uncertainty` alone. The published
+rule stays what the [approach page](./approach) documents, for a reason [Honest Scope](./limitations)
+states in full: twelve wafers on a binary target are not grounds to redefine the method, and the
+continuous run reverses the finding. `--terms uncertainty` runs the reduced rule today.
 
 ## Prior versus corrected reconstruction
+
+Both wafers below are single episodes, not results. The scored table above covers every evaluation
+wafer; these two are drawn because the mechanism is clearest on one and weakest on the other, and
+each image states the criterion that picked it. The pair is published together on purpose — one
+flattering wafer on its own is a claim nobody can check.
 
 <ResultAsset
   file="wafer_comparison.webp"
   title="Prior → reconstruction → ground truth"
-  caption="One wafer shown as biased prior, NANO reconstruction, and hidden ground truth on a common scale."
+  caption="The wafer whose prior error the measurements reduced most: biased prior, NANO reconstruction, and hidden ground truth on a common scale."
   producedBy="scripts/plot_wafer_comparison" />
+
+<ResultAsset
+  file="wafer_comparison_weakest.webp"
+  title="The same three panels, weakest wafer"
+  caption="The wafer where choosing what to measure earned the least over Random and Grid. Nobody selected it; it is whichever wafer the benchmark scored worst, and it is here so the figure above cannot be read as typical."
+  producedBy="python -m nano.benchmark" />
+
+Which wafer each figure shows is recorded in `results/benchmark_summary.json` under `figures`,
+together with the rule that chose it, so the caption cannot drift from the image. `--figure-wafer`
+overrides the first one; the weakest wafer is deliberately not overridable.
 
 ## Uncertainty before and after
 
@@ -168,20 +187,27 @@ See [Honest Scope](./limitations).
 
 ## Where NANO fails
 
-::: warning Not yet answered
-This section stays empty until the benchmark has actually run. It will record, from the results
-file and not from expectation:
+Every pattern class in the evaluation set is scored, including the ones that go the wrong way, and
+this is where they are rather than in a footnote.
 
-- failure patterns where NANO does not beat Random or Grid,
-- budgets at which the advantage disappears,
-- wafers where the biased prior was accidentally close to reality, so correction had nothing to do,
-- variance across seeds large enough to make the mean uninformative.
+<PatternTable />
 
-The run records what this section needs: `strategies.*.by_pattern` holds the per-pattern mean and
-spread for every arm, `episodes` holds every individual `(wafer, seed)` result, and the paired
-figure above is drawn from them. If NANO loses on a pattern class, that belongs here in full, not in
-a footnote.
-:::
+Three things in this run deserve more attention than the headline number:
+
+- **Random defects.** On the one wafer whose failures have no spatial structure, NANO ends behind
+  Grid. A rule that ranks locations by coverage and prior disagreement has nothing to exploit when
+  failures are scattered independently, and that is the honest shape of the claim: choosing where to
+  measure helps where reality has structure to find.
+- **Plain MAE.** The advantage over Random and Grid does not survive the switch away from the
+  balanced metric — both intervals span zero, and the table at the top of this page says so. What
+  balancing rewards is getting the rare failing dies right, which is what the budget is being spent
+  on.
+- **Seed spread.** On the Near-full class the seed-to-seed spread is wider than the margin over the
+  baselines, so that row's mean is not a conclusion. Five episodes is five episodes.
+
+The wafer where selection earned least is published as a figure above. The per-episode records
+behind this table are in `episodes`, one entry per `(wafer, seed)`, and the per-pattern means come
+from `strategies.*.by_pattern`.
 
 ## Results file schema
 

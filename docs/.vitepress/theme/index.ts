@@ -9,6 +9,7 @@ import BenchmarkChart from './components/BenchmarkChart.vue'
 import BenchmarkTable from './components/BenchmarkTable.vue'
 import EvidenceStrip from './components/EvidenceStrip.vue'
 import MetricCard from './components/MetricCard.vue'
+import PatternTable from './components/PatternTable.vue'
 import ResultAsset from './components/ResultAsset.vue'
 import WaferComparison from './components/WaferComparison.vue'
 
@@ -28,6 +29,7 @@ export default {
     app.component('EvidenceStrip', EvidenceStrip)
     app.component('MetricCard', MetricCard)
     app.component('AblationTable', AblationTable)
+    app.component('PatternTable', PatternTable)
     app.component('ResultAsset', ResultAsset)
     app.component('WaferComparison', WaferComparison)
   }

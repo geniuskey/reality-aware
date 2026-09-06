@@ -64,8 +64,8 @@ source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
 pytest                                        # test suite, no dataset needed
-python -m nano.demo --wafer 0 --seed 0        # single episode, writes demo figures
-python -m nano.benchmark --seeds 0 1 2 3 4    # full comparison, writes the results file
+python -m nano.demo --wafer wm811k-645735 --seed 0    # the published episode, writes demo figures
+python -m nano.benchmark --seeds 0 1 2 3 4 --ablation # full comparison, writes the results file
 ```
 
 `pip install -e .` alone installs numpy and nothing else, which is enough to run the loop and the
@@ -120,12 +120,28 @@ exactly without redistributing the source data. `python -m nano.benchmark` reads
 Individual figures can be regenerated one at a time, without re-running the benchmark:
 
 ```bash
-python scripts/plot_wafer_comparison.py --wafer 0 --seed 0
-python scripts/plot_uncertainty.py --wafer 0 --seed 0
+python scripts/plot_wafer_comparison.py --wafer wm811k-645735 --seed 0
+python scripts/plot_uncertainty.py --wafer wm811k-645735 --seed 0
 python scripts/plot_paired_improvement.py          # reads the results file
 python scripts/plot_calibration.py                 # reads the results file
-python scripts/record_demo.py --wafer 0 --seed 0
+python scripts/record_demo.py --wafer wm811k-645735 --seed 0
 ```
+
+`--wafer` takes a wafer id or a positional index. The id is the reliable form: an index means a
+different wafer as soon as the evaluation set changes, which is why the published figures name one.
+Which wafer the published figures show is not a choice made in this page — it is recorded in
+`results/benchmark_summary.json` under `figures`, next to the rule that selected it:
+
+```bash
+python -m nano.benchmark --seeds 0 1 2 3 4                          # picks both figure wafers
+python -m nano.benchmark --seeds 0 1 2 3 4 --figure-wafer wm811k-19423   # override the first
+```
+
+The benchmark always also draws the wafer where the selection rule earned the least over Random and
+Grid, and `--figure-wafer` cannot change that one.
+
+Figures follow the results file: `--out` pointed somewhere else writes that run's figures beside it,
+so a check run cannot leave its pictures next to someone else's numbers in `results/`.
 
 ### Controlling seeds
 

@@ -22,8 +22,8 @@ Manufacturing, 2015.
 ::: tip Implementation status
 The subset builder is `python -m nano.subset` and the harness is `python -m nano.benchmark`. Any
 field below written as `recorded at run time` is deliberately empty on this page: it is filled from
-the artifacts a run produces, not typed in by hand, and this repository publishes no run against
-WM-811K yet.
+the artifacts a run produces, not typed in by hand. The published run used the twelve wafers named in
+`data/subsets/wm811k_eval.json`, drawn from a local `LSWMD.pkl` by that builder.
 
 Without a local copy of the dataset the pipeline still runs, on generated stand-in wafers
 (`--synthetic`). Those are **not** WM-811K: the results file records `dataset.name` as

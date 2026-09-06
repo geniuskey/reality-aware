@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "dataset": "WM-811K",
+  "source_file": "data/raw/LSWMD.pkl",
+  "selection": {
+    "seed": 0,
+    "n_wafers": 12,
+    "min_dies": 400,
+    "patterns": [
+      "Center",
+      "Donut",
+      "Edge-Loc",
+      "Edge-Ring",
+      "Loc",
+      "Near-full",
+      "Random",
+      "Scratch"
+    ],
+    "stratified": true
+  },
+  "wafers": [
+    {
+      "wafer_id": "wm811k-19423",
+      "index": 19423,
+      "pattern": "Random",
+      "grid_shape": [
+        41,
+        41
+      ],
+      "n_dies": 1349
+    },
+    {
+      "wafer_id": "wm811k-249130",
+      "index": 249130,
+      "pattern": "Near-full",
+      "grid_shape": [
+        27,
+        27
+      ],
+      "n_dies": 549
+    },
+    {
+      "wafer_id": "wm811k-255187",
+      "index": 255187,
+      "pattern": "Center",
+      "grid_shape": [
+        39,
+        46
+      ],
+      "n_dies": 1389
+    },
+    {
+      "wafer_id": "wm811k-276024",
+      "index": 276024,
+      "pattern": "Edge-Ring",
+      "grid_shape": [
+        121,
+        81
+      ],
+      "n_dies": 7777
+    },
+    {
+      "wafer_id": "wm811k-279039",
+      "index": 279039,
+      "pattern": "Donut",
+      "grid_shape": [
+        41,
+        42
+      ],
+      "n_dies": 1334
+    },
+    {
+      "wafer_id": "wm811k-279768",
+      "index": 279768,
+      "pattern": "Donut",
+      "grid_shape": [
+        41,
+        42
+      ],
+      "n_dies": 1334
+    },
+    {
+      "wafer_id": "wm811k-627870",
+      "index": 627870,
+      "pattern": "Center",
+      "grid_shape": [
+        31,
+        31
+      ],
+      "n_dies": 733
+    },
+    {
+      "wafer_id": "wm811k-645735",
+      "index": 645735,
+      "pattern": "Edge-Ring",
+      "grid_shape": [
+        26,
+        26
+      ],
+      "n_dies": 533
+    },
+    {
+      "wafer_id": "wm811k-650464",
+      "index": 650464,
+      "pattern": "Edge-Loc",
+      "grid_shape": [
+        30,
+        34
+      ],
+      "n_dies": 776
+    },
+    {
+      "wafer_id": "wm811k-683097",
+      "index": 683097,
+      "pattern": "Scratch",
+      "grid_shape": [
+        35,
+        31
+      ],
+      "n_dies": 845
+    },
+    {
+      "wafer_id": "wm811k-797319",
+      "index": 797319,
+      "pattern": "Loc",
+      "grid_shape": [
+        29,
+        26
+      ],
+      "n_dies": 562
+    },
+    {
+      "wafer_id": "wm811k-809662",
+      "index": 809662,
+      "pattern": "Edge-Loc",
+      "grid_shape": [
+        41,
+        33
+      ],
+      "n_dies": 1060
+    }
+  ]
+}

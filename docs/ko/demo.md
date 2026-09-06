@@ -9,13 +9,13 @@ description: NANO 에피소드 하나를 단계별로 - 편향된 prior, 희소�
 데모는 실시간 실행이 아니라 실제 실행을 기록한 것이다. 인터랙티브 버전은 로컬에서 실행된다 —
 [재현](./reproducibility)을 참고하세요.
 
-::: warning 아직 게시된 기록이 없음
-데모는 구현되어 있다 — `python -m nano.demo --wafer 0 --seed 0`은 결정 추적을 출력하고 아래의 모든
-그림을 생성한다 — 그러나 WM-811K 실행에서 나온 기록은 여기에 게시되지 않았다. 아래 각 블록은 자신이
-어떤 아티팩트를 기다리고 있는지 밝히며, 실제 실행으로 오인될 수 있는 대체물로 설명한 것은 하나도
-없다.
+::: tip 실제 실행을 기록한 것
+아래의 모든 그림은 WM-811K의 `wm811k-645735`(Edge-Ring, 다이 533개)에서 시드 0으로 실행한 에피소드
+하나를 `python -m nano.demo --wafer wm811k-645735 --seed 0`으로 기록한 것이다. 웨이퍼 한 장이며,
+메커니즘이 가장 뚜렷하게 보이는 웨이퍼를 골랐다 — [벤치마크](./benchmark)는 12장 전체를 채점하고,
+가장 좋은 웨이퍼 옆에 가장 약한 웨이퍼를 함께 게시한다.
 
-로컬에서 실행하면 그림이 생성되고, `npm run sync:assets`가 그것을 로컬 빌드의 이 사이트로
+로컬에서 다시 실행하면 그림이 재생성되고, `npm run sync:assets`가 그것을 로컬 빌드의 이 사이트로
 게시한다.
 :::
 
@@ -61,8 +61,16 @@ description: NANO 에피소드 하나를 단계별로 - 편향된 prior, 희소�
 명령은 같은 분해를 측정 한 번에 한 줄씩 텍스트로도 출력한다.
 
 ```text
-m= 22  die   472  score 0.2551  [uncertainty=0.797 disagreement=0.572 novelty=0.559]  measured 0
+m= 20  die   188  score 0.5179  [uncertainty=1.000 disagreement=0.518 novelty=1.000]  measured 0
+m= 21  die     1  score 0.4861  [uncertainty=1.000 disagreement=0.486 novelty=1.000]  measured 0
+m= 22  die   369  score 0.4565  [uncertainty=1.000 disagreement=0.457 novelty=1.000]  measured 1
 ```
+
+이 세 줄을 자세히 보면 설계가 말하지 않는 것이 드러난다. 중앙에 편향된 초기 마스크에서 이만큼 떨어진
+곳에서는 불확실성과 참신성이 모두 1.0에 붙어 있으므로, 점수는 사실상 불일치 항 그 자체이고 나머지 두
+항은 아무 순서도 만들지 않는다. 세 항의 곱이 정말로 제 값을 하는지는
+[ablation](./benchmark#획득-규칙의-각-항은-제-몫을-하는가)이 측정하며, WM-811K에서 나온 답은 설계가
+가정한 답이 아니다.
 
 <ResultAsset
   file="demo_selection.webp"

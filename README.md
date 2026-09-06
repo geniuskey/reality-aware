@@ -9,14 +9,18 @@ Docs site: <https://geniuskey.github.io/reality-aware/> (Korean: <https://genius
 
 ## Status
 
-The agent, the WM-811K subset builder, the benchmark harness and the documentation site are all in
-this repository. What is **not** here is a published benchmark run: WM-811K is not committed, so
-`results/benchmark_summary.json` does not exist and every metric, table and chart on the site shows
-`Run benchmark to generate results` until it does.
+A benchmark run against WM-811K is published: 12 wafers × 5 seeds, 20 initial measurements plus a
+budget of 60. On balanced MAE, NANO beats Random by 8.7% [6.6, 11.1] and Grid by 6.3% [4.6, 8.1],
+both intervals clear of zero. On plain MAE it is **not separated** from either. The ablation in the
+same run finds `uncertainty` alone beating the published three-term rule by 2.2% [0.6, 4.3] — a
+result against the design, which is why it is on the benchmark page and not in a footnote.
 
-The pipeline runs without the dataset, on clearly labelled stand-in wafers (`--synthetic`), which is
-how the code is tested. Those numbers are never committed here and the site prints the wafer source
-under every results table, so a stand-in number cannot be read as a dataset number.
+WM-811K itself is not committed. `data/subsets/wm811k_eval.json` names the twelve wafers and
+`results/benchmark_summary.json` holds every number the site renders, so the run can be rebuilt and
+checked without redistributing the dataset. The pipeline also runs without it, on clearly labelled
+stand-in wafers (`--synthetic`), which is how the code is tested. Those numbers are never committed
+here and the site prints the wafer source under every results table, so a stand-in number cannot be
+read as a dataset number.
 
 See [Honest Scope](https://geniuskey.github.io/reality-aware/limitations) for what is claimed and
 what is not.
@@ -30,7 +34,7 @@ python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
-pytest                                                     # 115 tests, no dataset needed
+pytest                                                     # 121 tests, no dataset needed
 python -m nano.demo --synthetic --wafer 0 --seed 0          # one narrated episode + figures
 python -m nano.benchmark --synthetic --seeds 0 1 2 3 4      # all three arms + results file
 python -m nano.benchmark --synthetic --ablation             # what each acquisition term is worth
@@ -73,9 +77,9 @@ metric on a binary target is balanced MAE, since plain MAE over rare failures is
 "no die fails" everywhere; both are reported. `--ablation` re-runs the rule with terms dropped, and
 every run reports whether its uncertainty map actually ranks the dies by error.
 
-Findings from the stand-in source are on the
-[Honest Scope page](https://geniuskey.github.io/reality-aware/limitations), including the two that
-go against the design.
+What the published run does and does not establish is on the
+[Honest Scope page](https://geniuskey.github.io/reality-aware/limitations), including the findings
+that go against the design.
 
 ## Run the docs locally
 

@@ -142,6 +142,16 @@ const en = {
     emptyTail: ' and this table fills itself in.'
   },
 
+  pattern: {
+    caption: (metric: string) =>
+      `Final ${metric} per failure pattern, worst margin first. Each row is the mean over that class's episodes; the margin is against whichever baseline did better on that class.`,
+    pattern: 'Failure pattern',
+    episodes: 'Episodes',
+    margin: 'Margin over the better baseline',
+    note: 'The margin column is a difference of means, not a separated result: the paired bootstrap on this page runs over all episodes, and a single pattern class holds too few to carry an interval. A row at or below zero is a class where choosing what to measure bought nothing.',
+    empty: 'No per-pattern breakdown in this results file.'
+  },
+
   evidence: {
     nano: 'NANO',
     nanoHint: (metric: string) => `Final ${metric} after the full budget`,
@@ -304,6 +314,16 @@ const ko: Strings = {
     note: '게시된 규칙을 이기는 행은 각주가 아니라 결과다. 그 행이 뺀 항은 이 웨이퍼 출처에서 정확도를 사는 것이 아니라 깎고 있다는 뜻이다.',
     emptyLead: '이 결과 파일에는 ablation이 없습니다.',
     emptyTail: ' 를 실행하면 이 표가 스스로 채워집니다.'
+  },
+
+  pattern: {
+    caption: (metric: string) =>
+      `불량 패턴별 최종 ${metric}, 마진이 가장 나쁜 순. 각 행은 그 클래스에 속한 에피소드의 평균이며, 마진은 그 클래스에서 더 좋았던 baseline을 기준으로 한다.`,
+    pattern: '불량 패턴',
+    episodes: '에피소드',
+    margin: '더 좋은 baseline 대비 마진',
+    note: '마진 열은 평균의 차이일 뿐 구분된 결과가 아니다. 이 페이지의 페어링 부트스트랩은 전체 에피소드에 대해 실행되며, 패턴 클래스 하나에 속한 에피소드는 신뢰구간을 붙이기에 너무 적다. 0 이하인 행은 어디를 측정할지 고르는 것이 아무것도 벌지 못한 클래스다.',
+    empty: '이 결과 파일에는 패턴별 분해가 없습니다.'
   },
 
   evidence: {

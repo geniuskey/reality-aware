@@ -80,8 +80,9 @@ That decision — not the interpolation — is the contribution.
 
 ## Run the experiment yourself
 
-Every number on this site is generated from a single results file in the repository. Nothing is
-hand-written into the pages, so if the benchmark has not been run, the site says so.
+Every number on this site is generated from a single results file in the repository — the run
+against WM-811K, 12 wafers × 5 seeds. Nothing is hand-written into the pages, so a page whose
+artifact is missing says so instead of inventing one.
 
 <div class="nano-panel" style="text-align:center; margin: 1.5rem 0 2.5rem;">
   <p style="margin:0 0 0.9rem;">Clone the repository, run the benchmark, and regenerate every figure on this site.</p>

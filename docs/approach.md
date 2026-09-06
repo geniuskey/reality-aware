@@ -115,7 +115,10 @@ product of the three terms in its own trace.
 
 Stating a rule is not the same as showing it helps. `python -m nano.benchmark --ablation` re-runs the
 loop with terms dropped, and the [benchmark page](./benchmark) publishes what each term is worth —
-including where a reduced rule beats this one.
+including where a reduced rule beats this one, which on the published WM-811K run is exactly what
+happens: `uncertainty` alone scores better than the product documented above. The rule here has not
+been changed on the strength of twelve wafers; [Honest Scope](./limitations) says why, and what would
+change it.
 :::
 
 ## Stopping and determinism

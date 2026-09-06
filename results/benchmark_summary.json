@@ -1,0 +1,3258 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-06T10:27:49Z",
+  "git_commit": "85804cf",
+  "dataset": {
+    "name": "WM-811K",
+    "subset_file": "data/subsets/wm811k_eval.json",
+    "n_wafers": 12,
+    "target": "binary",
+    "patterns": {
+      "Center": 2,
+      "Donut": 2,
+      "Edge-Loc": 2,
+      "Edge-Ring": 2,
+      "Loc": 1,
+      "Near-full": 1,
+      "Random": 1,
+      "Scratch": 1
+    }
+  },
+  "experiment": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "initial_measurements": 20,
+    "measurement_budget": 60,
+    "grid_shape": [
+      41,
+      42
+    ],
+    "grid_shape_note": "modal die grid across the evaluation wafers; wafers are never resized",
+    "target_kind": "binary",
+    "mean_dies_per_wafer": 1520.1,
+    "episodes": 60,
+    "acquisition_rule": "uncertainty x disagreement x novelty",
+    "prior_bias": {
+      "smoothing_sigma": 2.4,
+      "radial_strength": 0.7,
+      "radial_power": 2.0,
+      "gain": 0.85,
+      "offset": 0.05
+    },
+    "model": {
+      "kernel": "gaussian",
+      "length_scale": "per-wafer default (wafer span / 12)",
+      "prior_weight": 0.5
+    }
+  },
+  "metric": {
+    "name": "Balanced MAE",
+    "unit": "failure probability",
+    "scope": "mean of the failing-die and passing-die errors",
+    "key": "balanced_mae",
+    "direction": "lower_is_better"
+  },
+  "metrics": {
+    "balanced_mae": {
+      "name": "Balanced MAE",
+      "unit": "failure probability",
+      "scope": "mean of the failing-die and passing-die errors",
+      "direction": "lower_is_better"
+    },
+    "mae": {
+      "name": "MAE",
+      "unit": "failure probability",
+      "scope": "all in-wafer dies",
+      "direction": "lower_is_better"
+    },
+    "mae_failing": {
+      "name": "MAE on failing dies",
+      "unit": "failure probability",
+      "scope": "dies whose hidden value is 1.0",
+      "direction": "lower_is_better"
+    },
+    "mae_passing": {
+      "name": "MAE on passing dies",
+      "unit": "failure probability",
+      "scope": "dies whose hidden value is 0.0",
+      "direction": "lower_is_better"
+    },
+    "rmse": {
+      "name": "RMSE",
+      "unit": "failure probability",
+      "scope": "all in-wafer dies",
+      "direction": "lower_is_better"
+    }
+  },
+  "prior": {
+    "initial_error": {
+      "mean": 0.437638,
+      "std": 0.056747
+    }
+  },
+  "strategies": {
+    "nano": {
+      "label": "NANO",
+      "description": "highest acquisition score",
+      "final": {
+        "mean": 0.34787,
+        "std": 0.052432
+      },
+      "metrics": {
+        "mae": {
+          "mean": 0.229233,
+          "std": 0.086188
+        },
+        "rmse": {
+          "mean": 0.331926,
+          "std": 0.082952
+        },
+        "mae_failing": {
+          "mean": 0.462587,
+          "std": 0.185973
+        },
+        "mae_passing": {
+          "mean": 0.233153,
+          "std": 0.161837
+        },
+        "balanced_mae": {
+          "mean": 0.34787,
+          "std": 0.052432
+        }
+      },
+      "curve": [
+        {
+          "measurements": 20,
+          "mean": 0.416531,
+          "std": 0.063999
+        },
+        {
+          "measurements": 21,
+          "mean": 0.412716,
+          "std": 0.061954
+        },
+        {
+          "measurements": 22,
+          "mean": 0.410278,
+          "std": 0.059892
+        },
+        {
+          "measurements": 23,
+          "mean": 0.407645,
+          "std": 0.057198
+        },
+        {
+          "measurements": 24,
+          "mean": 0.40535,
+          "std": 0.056968
+        },
+        {
+          "measurements": 25,
+          "mean": 0.403591,
+          "std": 0.056234
+        },
+        {
+          "measurements": 26,
+          "mean": 0.402163,
+          "std": 0.055938
+        },
+        {
+          "measurements": 27,
+          "mean": 0.400174,
+          "std": 0.055368
+        },
+        {
+          "measurements": 28,
+          "mean": 0.398419,
+          "std": 0.055586
+        },
+        {
+          "measurements": 29,
+          "mean": 0.397033,
+          "std": 0.056186
+        },
+        {
+          "measurements": 30,
+          "mean": 0.395007,
+          "std": 0.05611
+        },
+        {
+          "measurements": 31,
+          "mean": 0.393135,
+          "std": 0.05628
+        },
+        {
+          "measurements": 32,
+          "mean": 0.391306,
+          "std": 0.057345
+        },
+        {
+          "measurements": 33,
+          "mean": 0.390618,
+          "std": 0.05744
+        },
+        {
+          "measurements": 34,
+          "mean": 0.389437,
+          "std": 0.057167
+        },
+        {
+          "measurements": 35,
+          "mean": 0.388711,
+          "std": 0.056415
+        },
+        {
+          "measurements": 36,
+          "mean": 0.388452,
+          "std": 0.056451
+        },
+        {
+          "measurements": 37,
+          "mean": 0.38714,
+          "std": 0.056052
+        },
+        {
+          "measurements": 38,
+          "mean": 0.385403,
+          "std": 0.057759
+        },
+        {
+          "measurements": 39,
+          "mean": 0.384238,
+          "std": 0.056797
+        },
+        {
+          "measurements": 40,
+          "mean": 0.383131,
+          "std": 0.056823
+        },
+        {
+          "measurements": 41,
+          "mean": 0.381434,
+          "std": 0.0568
+        },
+        {
+          "measurements": 42,
+          "mean": 0.380477,
+          "std": 0.057111
+        },
+        {
+          "measurements": 43,
+          "mean": 0.379277,
+          "std": 0.056934
+        },
+        {
+          "measurements": 44,
+          "mean": 0.378032,
+          "std": 0.056606
+        },
+        {
+          "measurements": 45,
+          "mean": 0.377534,
+          "std": 0.05659
+        },
+        {
+          "measurements": 46,
+          "mean": 0.376664,
+          "std": 0.056359
+        },
+        {
+          "measurements": 47,
+          "mean": 0.376161,
+          "std": 0.056385
+        },
+        {
+          "measurements": 48,
+          "mean": 0.373708,
+          "std": 0.056677
+        },
+        {
+          "measurements": 49,
+          "mean": 0.373618,
+          "std": 0.055586
+        },
+        {
+          "measurements": 50,
+          "mean": 0.373146,
+          "std": 0.055717
+        },
+        {
+          "measurements": 51,
+          "mean": 0.3726,
+          "std": 0.055913
+        },
+        {
+          "measurements": 52,
+          "mean": 0.371697,
+          "std": 0.056175
+        },
+        {
+          "measurements": 53,
+          "mean": 0.371196,
+          "std": 0.055739
+        },
+        {
+          "measurements": 54,
+          "mean": 0.370901,
+          "std": 0.055195
+        },
+        {
+          "measurements": 55,
+          "mean": 0.369635,
+          "std": 0.055279
+        },
+        {
+          "measurements": 56,
+          "mean": 0.368794,
+          "std": 0.054847
+        },
+        {
+          "measurements": 57,
+          "mean": 0.36794,
+          "std": 0.054714
+        },
+        {
+          "measurements": 58,
+          "mean": 0.367281,
+          "std": 0.054417
+        },
+        {
+          "measurements": 59,
+          "mean": 0.366445,
+          "std": 0.054135
+        },
+        {
+          "measurements": 60,
+          "mean": 0.365088,
+          "std": 0.053424
+        },
+        {
+          "measurements": 61,
+          "mean": 0.36356,
+          "std": 0.05499
+        },
+        {
+          "measurements": 62,
+          "mean": 0.362004,
+          "std": 0.055558
+        },
+        {
+          "measurements": 63,
+          "mean": 0.361693,
+          "std": 0.055514
+        },
+        {
+          "measurements": 64,
+          "mean": 0.360804,
+          "std": 0.055287
+        },
+        {
+          "measurements": 65,
+          "mean": 0.360233,
+          "std": 0.05545
+        },
+        {
+          "measurements": 66,
+          "mean": 0.358942,
+          "std": 0.054591
+        },
+        {
+          "measurements": 67,
+          "mean": 0.357492,
+          "std": 0.053633
+        },
+        {
+          "measurements": 68,
+          "mean": 0.356286,
+          "std": 0.053119
+        },
+        {
+          "measurements": 69,
+          "mean": 0.355627,
+          "std": 0.053245
+        },
+        {
+          "measurements": 70,
+          "mean": 0.355222,
+          "std": 0.053042
+        },
+        {
+          "measurements": 71,
+          "mean": 0.354393,
+          "std": 0.052997
+        },
+        {
+          "measurements": 72,
+          "mean": 0.353462,
+          "std": 0.052849
+        },
+        {
+          "measurements": 73,
+          "mean": 0.352737,
+          "std": 0.052703
+        },
+        {
+          "measurements": 74,
+          "mean": 0.352073,
+          "std": 0.052524
+        },
+        {
+          "measurements": 75,
+          "mean": 0.35168,
+          "std": 0.052532
+        },
+        {
+          "measurements": 76,
+          "mean": 0.351043,
+          "std": 0.052485
+        },
+        {
+          "measurements": 77,
+          "mean": 0.349707,
+          "std": 0.052947
+        },
+        {
+          "measurements": 78,
+          "mean": 0.349049,
+          "std": 0.052601
+        },
+        {
+          "measurements": 79,
+          "mean": 0.348173,
+          "std": 0.052322
+        },
+        {
+          "measurements": 80,
+          "mean": 0.34787,
+          "std": 0.052432
+        }
+      ],
+      "by_pattern": {
+        "Center": {
+          "mean": 0.293411,
+          "std": 0.040127,
+          "n": 10
+        },
+        "Donut": {
+          "mean": 0.33853,
+          "std": 0.011831,
+          "n": 10
+        },
+        "Edge-Loc": {
+          "mean": 0.386687,
+          "std": 0.010136,
+          "n": 10
+        },
+        "Edge-Ring": {
+          "mean": 0.335056,
+          "std": 0.025602,
+          "n": 10
+        },
+        "Loc": {
+          "mean": 0.326568,
+          "std": 0.01007,
+          "n": 5
+        },
+        "Near-full": {
+          "mean": 0.293857,
+          "std": 0.047989,
+          "n": 5
+        },
+        "Random": {
+          "mean": 0.448345,
+          "std": 0.004954,
+          "n": 5
+        },
+        "Scratch": {
+          "mean": 0.398304,
+          "std": 0.009293,
+          "n": 5
+        }
+      }
+    },
+    "random": {
+      "label": "Random",
+      "description": "uniform over unmeasured dies",
+      "final": {
+        "mean": 0.381222,
+        "std": 0.052672
+      },
+      "metrics": {
+        "mae": {
+          "mean": 0.233704,
+          "std": 0.085661
+        },
+        "rmse": {
+          "mean": 0.342114,
+          "std": 0.077065
+        },
+        "mae_failing": {
+          "mean": 0.534647,
+          "std": 0.216217
+        },
+        "mae_passing": {
+          "mean": 0.227796,
+          "std": 0.182452
+        },
+        "balanced_mae": {
+          "mean": 0.381222,
+          "std": 0.052672
+        }
+      },
+      "curve": [
+        {
+          "measurements": 20,
+          "mean": 0.416531,
+          "std": 0.063999
+        },
+        {
+          "measurements": 21,
+          "mean": 0.416469,
+          "std": 0.06465
+        },
+        {
+          "measurements": 22,
+          "mean": 0.415519,
+          "std": 0.06411
+        },
+        {
+          "measurements": 23,
+          "mean": 0.41457,
+          "std": 0.062659
+        },
+        {
+          "measurements": 24,
+          "mean": 0.414928,
+          "std": 0.062093
+        },
+        {
+          "measurements": 25,
+          "mean": 0.414331,
+          "std": 0.062512
+        },
+        {
+          "measurements": 26,
+          "mean": 0.414179,
+          "std": 0.062155
+        },
+        {
+          "measurements": 27,
+          "mean": 0.413875,
+          "std": 0.061597
+        },
+        {
+          "measurements": 28,
+          "mean": 0.412831,
+          "std": 0.061638
+        },
+        {
+          "measurements": 29,
+          "mean": 0.413825,
+          "std": 0.060661
+        },
+        {
+          "measurements": 30,
+          "mean": 0.412261,
+          "std": 0.059864
+        },
+        {
+          "measurements": 31,
+          "mean": 0.412091,
+          "std": 0.059233
+        },
+        {
+          "measurements": 32,
+          "mean": 0.410942,
+          "std": 0.058909
+        },
+        {
+          "measurements": 33,
+          "mean": 0.409758,
+          "std": 0.058332
+        },
+        {
+          "measurements": 34,
+          "mean": 0.409242,
+          "std": 0.05763
+        },
+        {
+          "measurements": 35,
+          "mean": 0.408505,
+          "std": 0.057083
+        },
+        {
+          "measurements": 36,
+          "mean": 0.408037,
+          "std": 0.056524
+        },
+        {
+          "measurements": 37,
+          "mean": 0.407291,
+          "std": 0.056468
+        },
+        {
+          "measurements": 38,
+          "mean": 0.405884,
+          "std": 0.056625
+        },
+        {
+          "measurements": 39,
+          "mean": 0.406152,
+          "std": 0.056151
+        },
+        {
+          "measurements": 40,
+          "mean": 0.405772,
+          "std": 0.055623
+        },
+        {
+          "measurements": 41,
+          "mean": 0.404837,
+          "std": 0.055248
+        },
+        {
+          "measurements": 42,
+          "mean": 0.403412,
+          "std": 0.054455
+        },
+        {
+          "measurements": 43,
+          "mean": 0.40294,
+          "std": 0.054634
+        },
+        {
+          "measurements": 44,
+          "mean": 0.402744,
+          "std": 0.055195
+        },
+        {
+          "measurements": 45,
+          "mean": 0.402316,
+          "std": 0.054522
+        },
+        {
+          "measurements": 46,
+          "mean": 0.401989,
+          "std": 0.054374
+        },
+        {
+          "measurements": 47,
+          "mean": 0.401381,
+          "std": 0.054203
+        },
+        {
+          "measurements": 48,
+          "mean": 0.400683,
+          "std": 0.054227
+        },
+        {
+          "measurements": 49,
+          "mean": 0.398332,
+          "std": 0.054068
+        },
+        {
+          "measurements": 50,
+          "mean": 0.397594,
+          "std": 0.053777
+        },
+        {
+          "measurements": 51,
+          "mean": 0.397018,
+          "std": 0.05364
+        },
+        {
+          "measurements": 52,
+          "mean": 0.396083,
+          "std": 0.053688
+        },
+        {
+          "measurements": 53,
+          "mean": 0.395619,
+          "std": 0.053435
+        },
+        {
+          "measurements": 54,
+          "mean": 0.394317,
+          "std": 0.053514
+        },
+        {
+          "measurements": 55,
+          "mean": 0.39365,
+          "std": 0.054085
+        },
+        {
+          "measurements": 56,
+          "mean": 0.393302,
+          "std": 0.054068
+        },
+        {
+          "measurements": 57,
+          "mean": 0.392929,
+          "std": 0.053863
+        },
+        {
+          "measurements": 58,
+          "mean": 0.392075,
+          "std": 0.053749
+        },
+        {
+          "measurements": 59,
+          "mean": 0.391462,
+          "std": 0.053586
+        },
+        {
+          "measurements": 60,
+          "mean": 0.39102,
+          "std": 0.053372
+        },
+        {
+          "measurements": 61,
+          "mean": 0.390355,
+          "std": 0.053028
+        },
+        {
+          "measurements": 62,
+          "mean": 0.389829,
+          "std": 0.052987
+        },
+        {
+          "measurements": 63,
+          "mean": 0.389951,
+          "std": 0.052854
+        },
+        {
+          "measurements": 64,
+          "mean": 0.388695,
+          "std": 0.05417
+        },
+        {
+          "measurements": 65,
+          "mean": 0.388315,
+          "std": 0.054377
+        },
+        {
+          "measurements": 66,
+          "mean": 0.388205,
+          "std": 0.054883
+        },
+        {
+          "measurements": 67,
+          "mean": 0.387978,
+          "std": 0.054565
+        },
+        {
+          "measurements": 68,
+          "mean": 0.387621,
+          "std": 0.054485
+        },
+        {
+          "measurements": 69,
+          "mean": 0.387058,
+          "std": 0.054536
+        },
+        {
+          "measurements": 70,
+          "mean": 0.386251,
+          "std": 0.05402
+        },
+        {
+          "measurements": 71,
+          "mean": 0.385602,
+          "std": 0.054042
+        },
+        {
+          "measurements": 72,
+          "mean": 0.385287,
+          "std": 0.054168
+        },
+        {
+          "measurements": 73,
+          "mean": 0.384484,
+          "std": 0.05383
+        },
+        {
+          "measurements": 74,
+          "mean": 0.384064,
+          "std": 0.054064
+        },
+        {
+          "measurements": 75,
+          "mean": 0.383767,
+          "std": 0.053714
+        },
+        {
+          "measurements": 76,
+          "mean": 0.38317,
+          "std": 0.053456
+        },
+        {
+          "measurements": 77,
+          "mean": 0.382947,
+          "std": 0.053157
+        },
+        {
+          "measurements": 78,
+          "mean": 0.382358,
+          "std": 0.053074
+        },
+        {
+          "measurements": 79,
+          "mean": 0.381796,
+          "std": 0.053035
+        },
+        {
+          "measurements": 80,
+          "mean": 0.381222,
+          "std": 0.052672
+        }
+      ],
+      "by_pattern": {
+        "Center": {
+          "mean": 0.304352,
+          "std": 0.036873,
+          "n": 10
+        },
+        "Donut": {
+          "mean": 0.350411,
+          "std": 0.008388,
+          "n": 10
+        },
+        "Edge-Loc": {
+          "mean": 0.426789,
+          "std": 0.018491,
+          "n": 10
+        },
+        "Edge-Ring": {
+          "mean": 0.395112,
+          "std": 0.033097,
+          "n": 10
+        },
+        "Loc": {
+          "mean": 0.389909,
+          "std": 0.018214,
+          "n": 5
+        },
+        "Near-full": {
+          "mean": 0.370581,
+          "std": 0.053214,
+          "n": 5
+        },
+        "Random": {
+          "mean": 0.45082,
+          "std": 0.007675,
+          "n": 5
+        },
+        "Scratch": {
+          "mean": 0.410019,
+          "std": 0.014783,
+          "n": 5
+        }
+      }
+    },
+    "grid": {
+      "label": "Grid",
+      "description": "spatially uniform lattice",
+      "final": {
+        "mean": 0.371437,
+        "std": 0.049381
+      },
+      "metrics": {
+        "mae": {
+          "mean": 0.229907,
+          "std": 0.082654
+        },
+        "rmse": {
+          "mean": 0.340186,
+          "std": 0.076997
+        },
+        "mae_failing": {
+          "mean": 0.531412,
+          "std": 0.204534
+        },
+        "mae_passing": {
+          "mean": 0.211462,
+          "std": 0.156289
+        },
+        "balanced_mae": {
+          "mean": 0.371437,
+          "std": 0.049381
+        }
+      },
+      "curve": [
+        {
+          "measurements": 20,
+          "mean": 0.416531,
+          "std": 0.063999
+        },
+        {
+          "measurements": 21,
+          "mean": 0.414884,
+          "std": 0.059693
+        },
+        {
+          "measurements": 22,
+          "mean": 0.415119,
+          "std": 0.058536
+        },
+        {
+          "measurements": 23,
+          "mean": 0.413768,
+          "std": 0.056358
+        },
+        {
+          "measurements": 24,
+          "mean": 0.414321,
+          "std": 0.057035
+        },
+        {
+          "measurements": 25,
+          "mean": 0.413515,
+          "std": 0.056811
+        },
+        {
+          "measurements": 26,
+          "mean": 0.413072,
+          "std": 0.05697
+        },
+        {
+          "measurements": 27,
+          "mean": 0.410451,
+          "std": 0.056051
+        },
+        {
+          "measurements": 28,
+          "mean": 0.408843,
+          "std": 0.055503
+        },
+        {
+          "measurements": 29,
+          "mean": 0.404797,
+          "std": 0.055805
+        },
+        {
+          "measurements": 30,
+          "mean": 0.404397,
+          "std": 0.056725
+        },
+        {
+          "measurements": 31,
+          "mean": 0.399033,
+          "std": 0.063944
+        },
+        {
+          "measurements": 32,
+          "mean": 0.398458,
+          "std": 0.064535
+        },
+        {
+          "measurements": 33,
+          "mean": 0.398333,
+          "std": 0.064548
+        },
+        {
+          "measurements": 34,
+          "mean": 0.397168,
+          "std": 0.064492
+        },
+        {
+          "measurements": 35,
+          "mean": 0.398111,
+          "std": 0.063883
+        },
+        {
+          "measurements": 36,
+          "mean": 0.397336,
+          "std": 0.064253
+        },
+        {
+          "measurements": 37,
+          "mean": 0.397172,
+          "std": 0.06543
+        },
+        {
+          "measurements": 38,
+          "mean": 0.397097,
+          "std": 0.065434
+        },
+        {
+          "measurements": 39,
+          "mean": 0.396265,
+          "std": 0.065617
+        },
+        {
+          "measurements": 40,
+          "mean": 0.39599,
+          "std": 0.065478
+        },
+        {
+          "measurements": 41,
+          "mean": 0.394877,
+          "std": 0.065642
+        },
+        {
+          "measurements": 42,
+          "mean": 0.394608,
+          "std": 0.066453
+        },
+        {
+          "measurements": 43,
+          "mean": 0.394873,
+          "std": 0.066625
+        },
+        {
+          "measurements": 44,
+          "mean": 0.394012,
+          "std": 0.066927
+        },
+        {
+          "measurements": 45,
+          "mean": 0.393672,
+          "std": 0.063551
+        },
+        {
+          "measurements": 46,
+          "mean": 0.393989,
+          "std": 0.063289
+        },
+        {
+          "measurements": 47,
+          "mean": 0.393613,
+          "std": 0.063411
+        },
+        {
+          "measurements": 48,
+          "mean": 0.393511,
+          "std": 0.063217
+        },
+        {
+          "measurements": 49,
+          "mean": 0.392952,
+          "std": 0.062692
+        },
+        {
+          "measurements": 50,
+          "mean": 0.391894,
+          "std": 0.06256
+        },
+        {
+          "measurements": 51,
+          "mean": 0.390999,
+          "std": 0.062905
+        },
+        {
+          "measurements": 52,
+          "mean": 0.390954,
+          "std": 0.063044
+        },
+        {
+          "measurements": 53,
+          "mean": 0.39158,
+          "std": 0.060172
+        },
+        {
+          "measurements": 54,
+          "mean": 0.391624,
+          "std": 0.059756
+        },
+        {
+          "measurements": 55,
+          "mean": 0.39133,
+          "std": 0.059921
+        },
+        {
+          "measurements": 56,
+          "mean": 0.390826,
+          "std": 0.059799
+        },
+        {
+          "measurements": 57,
+          "mean": 0.390336,
+          "std": 0.059223
+        },
+        {
+          "measurements": 58,
+          "mean": 0.389583,
+          "std": 0.059507
+        },
+        {
+          "measurements": 59,
+          "mean": 0.389408,
+          "std": 0.059048
+        },
+        {
+          "measurements": 60,
+          "mean": 0.389163,
+          "std": 0.059436
+        },
+        {
+          "measurements": 61,
+          "mean": 0.388377,
+          "std": 0.057677
+        },
+        {
+          "measurements": 62,
+          "mean": 0.388235,
+          "std": 0.056809
+        },
+        {
+          "measurements": 63,
+          "mean": 0.387863,
+          "std": 0.056818
+        },
+        {
+          "measurements": 64,
+          "mean": 0.387546,
+          "std": 0.056557
+        },
+        {
+          "measurements": 65,
+          "mean": 0.387207,
+          "std": 0.05644
+        },
+        {
+          "measurements": 66,
+          "mean": 0.386923,
+          "std": 0.056513
+        },
+        {
+          "measurements": 67,
+          "mean": 0.386532,
+          "std": 0.056628
+        },
+        {
+          "measurements": 68,
+          "mean": 0.385486,
+          "std": 0.054849
+        },
+        {
+          "measurements": 69,
+          "mean": 0.382754,
+          "std": 0.052545
+        },
+        {
+          "measurements": 70,
+          "mean": 0.382886,
+          "std": 0.053663
+        },
+        {
+          "measurements": 71,
+          "mean": 0.382984,
+          "std": 0.053176
+        },
+        {
+          "measurements": 72,
+          "mean": 0.38306,
+          "std": 0.053361
+        },
+        {
+          "measurements": 73,
+          "mean": 0.380786,
+          "std": 0.052853
+        },
+        {
+          "measurements": 74,
+          "mean": 0.381095,
+          "std": 0.052556
+        },
+        {
+          "measurements": 75,
+          "mean": 0.381023,
+          "std": 0.053286
+        },
+        {
+          "measurements": 76,
+          "mean": 0.378094,
+          "std": 0.051826
+        },
+        {
+          "measurements": 77,
+          "mean": 0.375374,
+          "std": 0.050786
+        },
+        {
+          "measurements": 78,
+          "mean": 0.373352,
+          "std": 0.050743
+        },
+        {
+          "measurements": 79,
+          "mean": 0.370725,
+          "std": 0.050679
+        },
+        {
+          "measurements": 80,
+          "mean": 0.371437,
+          "std": 0.049381
+        }
+      ],
+      "by_pattern": {
+        "Center": {
+          "mean": 0.307667,
+          "std": 0.034872,
+          "n": 10
+        },
+        "Donut": {
+          "mean": 0.346827,
+          "std": 0.007655,
+          "n": 10
+        },
+        "Edge-Loc": {
+          "mean": 0.411842,
+          "std": 0.011865,
+          "n": 10
+        },
+        "Edge-Ring": {
+          "mean": 0.387578,
+          "std": 0.021846,
+          "n": 10
+        },
+        "Loc": {
+          "mean": 0.385397,
+          "std": 0.007621,
+          "n": 5
+        },
+        "Near-full": {
+          "mean": 0.307287,
+          "std": 0.030898,
+          "n": 5
+        },
+        "Random": {
+          "mean": 0.444368,
+          "std": 0.005106,
+          "n": 5
+        },
+        "Scratch": {
+          "mean": 0.41236,
+          "std": 0.00179,
+          "n": 5
+        }
+      }
+    }
+  },
+  "references": {
+    "prior": {
+      "label": "Uncorrected prior",
+      "description": "the simulation prior, with no measurement applied",
+      "final": {
+        "mean": 0.437638,
+        "std": 0.056747
+      },
+      "metrics": {
+        "mae": {
+          "mean": 0.294636,
+          "std": 0.099958
+        },
+        "rmse": {
+          "mean": 0.387523,
+          "std": 0.07064
+        },
+        "mae_failing": {
+          "mean": 0.70089,
+          "std": 0.155151
+        },
+        "mae_passing": {
+          "mean": 0.174386,
+          "std": 0.08722
+        },
+        "balanced_mae": {
+          "mean": 0.437638,
+          "std": 0.056747
+        }
+      }
+    },
+    "constant": {
+      "label": "Constant",
+      "description": "predicts 0.0 everywhere \u2014 \"no die fails\" \u2014 and reads no measurement",
+      "final": {
+        "mean": 0.5,
+        "std": 0.0
+      },
+      "metrics": {
+        "mae": {
+          "mean": 0.332481,
+          "std": 0.256383
+        },
+        "rmse": {
+          "mean": 0.540939,
+          "std": 0.199663
+        },
+        "mae_failing": {
+          "mean": 1.0,
+          "std": 0.0
+        },
+        "mae_passing": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "balanced_mae": {
+          "mean": 0.5,
+          "std": 0.0
+        }
+      }
+    }
+  },
+  "ablation": {
+    "nano_u": {
+      "label": "uncertainty",
+      "rule": "uncertainty",
+      "terms": [
+        "uncertainty"
+      ],
+      "final": {
+        "mean": 0.340268,
+        "std": 0.055484
+      },
+      "metrics": {
+        "mae": {
+          "mean": 0.238144,
+          "std": 0.087912
+        },
+        "rmse": {
+          "mean": 0.333145,
+          "std": 0.085818
+        },
+        "mae_failing": {
+          "mean": 0.434271,
+          "std": 0.180084
+        },
+        "mae_passing": {
+          "mean": 0.246265,
+          "std": 0.138053
+        },
+        "balanced_mae": {
+          "mean": 0.340268,
+          "std": 0.055484
+        }
+      }
+    },
+    "nano_ud": {
+      "label": "uncertainty \u00d7 disagreement",
+      "rule": "uncertainty x disagreement",
+      "terms": [
+        "uncertainty",
+        "disagreement"
+      ],
+      "final": {
+        "mean": 0.350287,
+        "std": 0.056422
+      },
+      "metrics": {
+        "mae": {
+          "mean": 0.236044,
+          "std": 0.098645
+        },
+        "rmse": {
+          "mean": 0.344347,
+          "std": 0.092676
+        },
+        "mae_failing": {
+          "mean": 0.463917,
+          "std": 0.203409
+        },
+        "mae_passing": {
+          "mean": 0.236656,
+          "std": 0.161867
+        },
+        "balanced_mae": {
+          "mean": 0.350287,
+          "std": 0.056422
+        }
+      }
+    },
+    "nano_un": {
+      "label": "uncertainty \u00d7 novelty",
+      "rule": "uncertainty x novelty",
+      "terms": [
+        "uncertainty",
+        "novelty"
+      ],
+      "final": {
+        "mean": 0.357436,
+        "std": 0.052366
+      },
+      "metrics": {
+        "mae": {
+          "mean": 0.233556,
+          "std": 0.083978
+        },
+        "rmse": {
+          "mean": 0.333588,
+          "std": 0.081895
+        },
+        "mae_failing": {
+          "mean": 0.480031,
+          "std": 0.197117
+        },
+        "mae_passing": {
+          "mean": 0.23484,
+          "std": 0.154864
+        },
+        "balanced_mae": {
+          "mean": 0.357436,
+          "std": 0.052366
+        }
+      }
+    },
+    "nano_dn": {
+      "label": "disagreement \u00d7 novelty",
+      "rule": "disagreement x novelty",
+      "terms": [
+        "disagreement",
+        "novelty"
+      ],
+      "final": {
+        "mean": 0.353412,
+        "std": 0.055059
+      },
+      "metrics": {
+        "mae": {
+          "mean": 0.228809,
+          "std": 0.087816
+        },
+        "rmse": {
+          "mean": 0.333292,
+          "std": 0.082835
+        },
+        "mae_failing": {
+          "mean": 0.481188,
+          "std": 0.192082
+        },
+        "mae_passing": {
+          "mean": 0.225636,
+          "std": 0.160985
+        },
+        "balanced_mae": {
+          "mean": 0.353412,
+          "std": 0.055059
+        }
+      }
+    }
+  },
+  "calibration": {
+    "scope": "unmeasured dies at the end of the budget, NANO arm",
+    "n_dies": 86405,
+    "rank_correlation": {
+      "pooled": 0.632052,
+      "per_episode_mean": 0.411633,
+      "per_episode_std": 0.253135,
+      "note": "Spearman correlation between reported uncertainty and absolute error. Positive means the map ranks usefully; it is not a coverage claim."
+    },
+    "reliability": [
+      {
+        "bin": 0,
+        "uncertainty_low": 0.190585,
+        "uncertainty_high": 0.356208,
+        "mean_uncertainty": 0.301432,
+        "mean_absolute_error": 0.054974,
+        "n": 8641
+      },
+      {
+        "bin": 1,
+        "uncertainty_low": 0.356208,
+        "uncertainty_high": 0.413631,
+        "mean_uncertainty": 0.387169,
+        "mean_absolute_error": 0.099492,
+        "n": 8640
+      },
+      {
+        "bin": 2,
+        "uncertainty_low": 0.413631,
+        "uncertainty_high": 0.450942,
+        "mean_uncertainty": 0.433931,
+        "mean_absolute_error": 0.155443,
+        "n": 8641
+      },
+      {
+        "bin": 3,
+        "uncertainty_low": 0.450942,
+        "uncertainty_high": 0.474924,
+        "mean_uncertainty": 0.463883,
+        "mean_absolute_error": 0.215823,
+        "n": 8640
+      },
+      {
+        "bin": 4,
+        "uncertainty_low": 0.474924,
+        "uncertainty_high": 0.491324,
+        "mean_uncertainty": 0.483536,
+        "mean_absolute_error": 0.261093,
+        "n": 8640
+      },
+      {
+        "bin": 5,
+        "uncertainty_low": 0.491324,
+        "uncertainty_high": 0.503397,
+        "mean_uncertainty": 0.497756,
+        "mean_absolute_error": 0.308322,
+        "n": 8641
+      },
+      {
+        "bin": 6,
+        "uncertainty_low": 0.503397,
+        "uncertainty_high": 0.513198,
+        "mean_uncertainty": 0.508251,
+        "mean_absolute_error": 0.349165,
+        "n": 8640
+      },
+      {
+        "bin": 7,
+        "uncertainty_low": 0.513198,
+        "uncertainty_high": 0.525019,
+        "mean_uncertainty": 0.518788,
+        "mean_absolute_error": 0.368969,
+        "n": 8641
+      },
+      {
+        "bin": 8,
+        "uncertainty_low": 0.525019,
+        "uncertainty_high": 0.549166,
+        "mean_uncertainty": 0.535321,
+        "mean_absolute_error": 0.374428,
+        "n": 8640
+      },
+      {
+        "bin": 9,
+        "uncertainty_low": 0.549166,
+        "uncertainty_high": 0.76816,
+        "mean_uncertainty": 0.585674,
+        "mean_absolute_error": 0.403352,
+        "n": 8641
+      }
+    ]
+  },
+  "comparisons": {
+    "balanced_mae": {
+      "random": {
+        "n": 60,
+        "wins": 53,
+        "losses": 7,
+        "ties": 0,
+        "mean": 0.033352,
+        "ci_low": 0.024772,
+        "ci_high": 0.042918,
+        "relative_mean": 8.7486,
+        "relative_ci_low": 6.5549,
+        "relative_ci_high": 11.1144,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "grid": {
+        "n": 60,
+        "wins": 49,
+        "losses": 11,
+        "ties": 0,
+        "mean": 0.023567,
+        "ci_low": 0.017156,
+        "ci_high": 0.030137,
+        "relative_mean": 6.3447,
+        "relative_ci_low": 4.6234,
+        "relative_ci_high": 8.1303,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "prior": {
+        "n": 60,
+        "wins": 59,
+        "losses": 1,
+        "ties": 0,
+        "mean": 0.089768,
+        "ci_low": 0.080364,
+        "ci_high": 0.099401,
+        "relative_mean": 20.5119,
+        "relative_ci_low": 18.5656,
+        "relative_ci_high": 22.4818,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "constant": {
+        "n": 60,
+        "wins": 60,
+        "losses": 0,
+        "ties": 0,
+        "mean": 0.15213,
+        "ci_low": 0.138985,
+        "ci_high": 0.165058,
+        "relative_mean": 30.426,
+        "relative_ci_low": 27.7969,
+        "relative_ci_high": 33.0116,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_u": {
+        "n": 60,
+        "wins": 25,
+        "losses": 35,
+        "ties": 0,
+        "mean": -0.007602,
+        "ci_low": -0.014333,
+        "ci_high": -0.00198,
+        "relative_mean": -2.2342,
+        "relative_ci_low": -4.3025,
+        "relative_ci_high": -0.5766,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_ud": {
+        "n": 60,
+        "wins": 35,
+        "losses": 25,
+        "ties": 0,
+        "mean": 0.002416,
+        "ci_low": -0.003214,
+        "ci_high": 0.008172,
+        "relative_mean": 0.6899,
+        "relative_ci_low": -0.9211,
+        "relative_ci_high": 2.2805,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_un": {
+        "n": 60,
+        "wins": 49,
+        "losses": 11,
+        "ties": 0,
+        "mean": 0.009565,
+        "ci_low": 0.003785,
+        "ci_high": 0.014715,
+        "relative_mean": 2.6761,
+        "relative_ci_low": 1.0649,
+        "relative_ci_high": 4.11,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_dn": {
+        "n": 60,
+        "wins": 36,
+        "losses": 24,
+        "ties": 0,
+        "mean": 0.005542,
+        "ci_low": 0.001864,
+        "ci_high": 0.009412,
+        "relative_mean": 1.5682,
+        "relative_ci_low": 0.5301,
+        "relative_ci_high": 2.6307,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      }
+    },
+    "mae": {
+      "random": {
+        "n": 60,
+        "wins": 42,
+        "losses": 18,
+        "ties": 0,
+        "mean": 0.004471,
+        "ci_low": -0.00487,
+        "ci_high": 0.012157,
+        "relative_mean": 1.9132,
+        "relative_ci_low": -2.1399,
+        "relative_ci_high": 5.2039,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "grid": {
+        "n": 60,
+        "wins": 35,
+        "losses": 25,
+        "ties": 0,
+        "mean": 0.000674,
+        "ci_low": -0.008608,
+        "ci_high": 0.009206,
+        "relative_mean": 0.2932,
+        "relative_ci_low": -3.7963,
+        "relative_ci_high": 4.0269,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "prior": {
+        "n": 60,
+        "wins": 55,
+        "losses": 5,
+        "ties": 0,
+        "mean": 0.065402,
+        "ci_low": 0.042095,
+        "ci_high": 0.092846,
+        "relative_mean": 22.1978,
+        "relative_ci_low": 14.9978,
+        "relative_ci_high": 30.0838,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "constant": {
+        "n": 60,
+        "wins": 27,
+        "losses": 33,
+        "ties": 0,
+        "mean": 0.103248,
+        "ci_low": 0.039187,
+        "ci_high": 0.180858,
+        "relative_mean": 31.0538,
+        "relative_ci_low": 14.0407,
+        "relative_ci_high": 45.4567,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_u": {
+        "n": 60,
+        "wins": 40,
+        "losses": 20,
+        "ties": 0,
+        "mean": 0.008911,
+        "ci_low": 0.004144,
+        "ci_high": 0.013435,
+        "relative_mean": 3.7419,
+        "relative_ci_low": 1.7214,
+        "relative_ci_high": 5.5604,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_ud": {
+        "n": 60,
+        "wins": 28,
+        "losses": 32,
+        "ties": 0,
+        "mean": 0.006811,
+        "ci_low": -0.000925,
+        "ci_high": 0.016111,
+        "relative_mean": 2.8856,
+        "relative_ci_low": -0.4097,
+        "relative_ci_high": 6.6079,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_un": {
+        "n": 60,
+        "wins": 43,
+        "losses": 17,
+        "ties": 0,
+        "mean": 0.004323,
+        "ci_low": 0.000221,
+        "ci_high": 0.008185,
+        "relative_mean": 1.8508,
+        "relative_ci_low": 0.0914,
+        "relative_ci_high": 3.5492,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_dn": {
+        "n": 60,
+        "wins": 29,
+        "losses": 31,
+        "ties": 0,
+        "mean": -0.000424,
+        "ci_low": -0.003032,
+        "ci_high": 0.002384,
+        "relative_mean": -0.1851,
+        "relative_ci_low": -1.3743,
+        "relative_ci_high": 1.0315,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      }
+    },
+    "mae_failing": {
+      "random": {
+        "n": 60,
+        "wins": 47,
+        "losses": 13,
+        "ties": 0,
+        "mean": 0.07206,
+        "ci_low": 0.049628,
+        "ci_high": 0.09559,
+        "relative_mean": 13.4781,
+        "relative_ci_low": 9.6605,
+        "relative_ci_high": 17.1394,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "grid": {
+        "n": 60,
+        "wins": 47,
+        "losses": 13,
+        "ties": 0,
+        "mean": 0.068825,
+        "ci_low": 0.049904,
+        "ci_high": 0.088734,
+        "relative_mean": 12.9513,
+        "relative_ci_low": 9.7098,
+        "relative_ci_high": 16.2765,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "prior": {
+        "n": 60,
+        "wins": 60,
+        "losses": 0,
+        "ties": 0,
+        "mean": 0.238303,
+        "ci_low": 0.216951,
+        "ci_high": 0.261819,
+        "relative_mean": 34.0001,
+        "relative_ci_low": 30.4098,
+        "relative_ci_high": 38.2302,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "constant": {
+        "n": 60,
+        "wins": 60,
+        "losses": 0,
+        "ties": 0,
+        "mean": 0.537413,
+        "ci_low": 0.493483,
+        "ci_high": 0.585596,
+        "relative_mean": 53.7413,
+        "relative_ci_low": 49.3483,
+        "relative_ci_high": 58.5596,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_u": {
+        "n": 60,
+        "wins": 15,
+        "losses": 45,
+        "ties": 0,
+        "mean": -0.028316,
+        "ci_low": -0.040317,
+        "ci_high": -0.016182,
+        "relative_mean": -6.5204,
+        "relative_ci_low": -9.4616,
+        "relative_ci_high": -3.7128,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_ud": {
+        "n": 60,
+        "wins": 34,
+        "losses": 26,
+        "ties": 0,
+        "mean": 0.00133,
+        "ci_low": -0.019919,
+        "ci_high": 0.020134,
+        "relative_mean": 0.2867,
+        "relative_ci_low": -4.5302,
+        "relative_ci_high": 4.1686,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_un": {
+        "n": 60,
+        "wins": 40,
+        "losses": 20,
+        "ties": 0,
+        "mean": 0.017444,
+        "ci_low": 0.006192,
+        "ci_high": 0.029517,
+        "relative_mean": 3.6339,
+        "relative_ci_low": 1.3195,
+        "relative_ci_high": 5.9971,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_dn": {
+        "n": 60,
+        "wins": 42,
+        "losses": 18,
+        "ties": 0,
+        "mean": 0.018602,
+        "ci_low": 0.009256,
+        "ci_high": 0.028946,
+        "relative_mean": 3.8658,
+        "relative_ci_low": 1.9554,
+        "relative_ci_high": 5.8945,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      }
+    },
+    "mae_passing": {
+      "random": {
+        "n": 60,
+        "wins": 27,
+        "losses": 33,
+        "ties": 0,
+        "mean": -0.005357,
+        "ci_low": -0.024212,
+        "ci_high": 0.015302,
+        "relative_mean": -2.3518,
+        "relative_ci_low": -11.6454,
+        "relative_ci_high": 6.2407,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "grid": {
+        "n": 60,
+        "wins": 23,
+        "losses": 37,
+        "ties": 0,
+        "mean": -0.021692,
+        "ci_low": -0.037941,
+        "ci_high": -0.00551,
+        "relative_mean": -10.258,
+        "relative_ci_low": -19.1313,
+        "relative_ci_high": -2.3685,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "prior": {
+        "n": 60,
+        "wins": 17,
+        "losses": 43,
+        "ties": 0,
+        "mean": -0.058767,
+        "ci_low": -0.082084,
+        "ci_high": -0.037314,
+        "relative_mean": -33.6993,
+        "relative_ci_low": -43.9724,
+        "relative_ci_high": -23.1084,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "constant": {
+        "n": 60,
+        "wins": 0,
+        "losses": 60,
+        "ties": 0,
+        "mean": -0.233153,
+        "ci_low": -0.275691,
+        "ci_high": -0.195312,
+        "relative_mean": null,
+        "relative_ci_low": null,
+        "relative_ci_high": null,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_u": {
+        "n": 60,
+        "wins": 43,
+        "losses": 17,
+        "ties": 0,
+        "mean": 0.013112,
+        "ci_low": -0.002942,
+        "ci_high": 0.027241,
+        "relative_mean": 5.3242,
+        "relative_ci_low": -1.1713,
+        "relative_ci_high": 11.4937,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_ud": {
+        "n": 60,
+        "wins": 26,
+        "losses": 34,
+        "ties": 0,
+        "mean": 0.003503,
+        "ci_low": -0.010031,
+        "ci_high": 0.018749,
+        "relative_mean": 1.4801,
+        "relative_ci_low": -4.4063,
+        "relative_ci_high": 7.709,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_un": {
+        "n": 60,
+        "wins": 34,
+        "losses": 26,
+        "ties": 0,
+        "mean": 0.001687,
+        "ci_low": -0.01161,
+        "ci_high": 0.013905,
+        "relative_mean": 0.7184,
+        "relative_ci_low": -5.1097,
+        "relative_ci_high": 6.1303,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_dn": {
+        "n": 60,
+        "wins": 24,
+        "losses": 36,
+        "ties": 0,
+        "mean": -0.007517,
+        "ci_low": -0.015366,
+        "ci_high": 0.000186,
+        "relative_mean": -3.3316,
+        "relative_ci_low": -7.1512,
+        "relative_ci_high": 0.0839,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      }
+    },
+    "rmse": {
+      "random": {
+        "n": 60,
+        "wins": 46,
+        "losses": 14,
+        "ties": 0,
+        "mean": 0.010188,
+        "ci_low": 0.006089,
+        "ci_high": 0.014366,
+        "relative_mean": 2.9779,
+        "relative_ci_low": 1.7642,
+        "relative_ci_high": 4.3177,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "grid": {
+        "n": 60,
+        "wins": 48,
+        "losses": 12,
+        "ties": 0,
+        "mean": 0.00826,
+        "ci_low": 0.004387,
+        "ci_high": 0.01191,
+        "relative_mean": 2.428,
+        "relative_ci_low": 1.2586,
+        "relative_ci_high": 3.6108,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "prior": {
+        "n": 60,
+        "wins": 55,
+        "losses": 5,
+        "ties": 0,
+        "mean": 0.055597,
+        "ci_low": 0.03578,
+        "ci_high": 0.08008,
+        "relative_mean": 14.3467,
+        "relative_ci_low": 9.3754,
+        "relative_ci_high": 20.2054,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "constant": {
+        "n": 60,
+        "wins": 60,
+        "losses": 0,
+        "ties": 0,
+        "mean": 0.209013,
+        "ci_low": 0.156614,
+        "ci_high": 0.271412,
+        "relative_mean": 38.6389,
+        "relative_ci_low": 31.3562,
+        "relative_ci_high": 46.1459,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_u": {
+        "n": 60,
+        "wins": 31,
+        "losses": 29,
+        "ties": 0,
+        "mean": 0.001219,
+        "ci_low": -0.002373,
+        "ci_high": 0.004511,
+        "relative_mean": 0.3659,
+        "relative_ci_low": -0.7202,
+        "relative_ci_high": 1.3214,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_ud": {
+        "n": 60,
+        "wins": 38,
+        "losses": 22,
+        "ties": 0,
+        "mean": 0.012421,
+        "ci_low": 0.004351,
+        "ci_high": 0.022381,
+        "relative_mean": 3.607,
+        "relative_ci_low": 1.2581,
+        "relative_ci_high": 6.4111,
+        "separates": true,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_un": {
+        "n": 60,
+        "wins": 41,
+        "losses": 19,
+        "ties": 0,
+        "mean": 0.001661,
+        "ci_low": -0.000952,
+        "ci_high": 0.003935,
+        "relative_mean": 0.498,
+        "relative_ci_low": -0.2872,
+        "relative_ci_high": 1.2045,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      },
+      "nano_dn": {
+        "n": 60,
+        "wins": 36,
+        "losses": 24,
+        "ties": 0,
+        "mean": 0.001366,
+        "ci_low": -0.000316,
+        "ci_high": 0.002956,
+        "relative_mean": 0.4099,
+        "relative_ci_low": -0.0926,
+        "relative_ci_high": 0.8841,
+        "separates": false,
+        "confidence": 0.95,
+        "method": "paired bootstrap over 60 episodes, 2000 resamples, seed 0"
+      }
+    }
+  },
+  "episodes": [
+    {
+      "wafer_id": "wm811k-19423",
+      "pattern": "Random",
+      "seed": 0,
+      "n_dies": 1349,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.507402,
+        "constant": 0.5,
+        "nano": 0.450333,
+        "random": 0.452326,
+        "grid": 0.446532,
+        "nano_u": 0.451246,
+        "nano_ud": 0.463668,
+        "nano_un": 0.463961,
+        "nano_dn": 0.457927
+      }
+    },
+    {
+      "wafer_id": "wm811k-19423",
+      "pattern": "Random",
+      "seed": 1,
+      "n_dies": 1349,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.507402,
+        "constant": 0.5,
+        "nano": 0.44168,
+        "random": 0.446847,
+        "grid": 0.441874,
+        "nano_u": 0.438027,
+        "nano_ud": 0.44388,
+        "nano_un": 0.449026,
+        "nano_dn": 0.449815
+      }
+    },
+    {
+      "wafer_id": "wm811k-19423",
+      "pattern": "Random",
+      "seed": 2,
+      "n_dies": 1349,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.507402,
+        "constant": 0.5,
+        "nano": 0.450609,
+        "random": 0.461877,
+        "grid": 0.443784,
+        "nano_u": 0.427215,
+        "nano_ud": 0.461287,
+        "nano_un": 0.4381,
+        "nano_dn": 0.457804
+      }
+    },
+    {
+      "wafer_id": "wm811k-19423",
+      "pattern": "Random",
+      "seed": 3,
+      "n_dies": 1349,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.507402,
+        "constant": 0.5,
+        "nano": 0.443793,
+        "random": 0.438867,
+        "grid": 0.437121,
+        "nano_u": 0.438451,
+        "nano_ud": 0.443976,
+        "nano_un": 0.434312,
+        "nano_dn": 0.442841
+      }
+    },
+    {
+      "wafer_id": "wm811k-19423",
+      "pattern": "Random",
+      "seed": 4,
+      "n_dies": 1349,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.507402,
+        "constant": 0.5,
+        "nano": 0.455307,
+        "random": 0.454183,
+        "grid": 0.452528,
+        "nano_u": 0.441025,
+        "nano_ud": 0.451026,
+        "nano_un": 0.436513,
+        "nano_dn": 0.463774
+      }
+    },
+    {
+      "wafer_id": "wm811k-249130",
+      "pattern": "Near-full",
+      "seed": 0,
+      "n_dies": 549,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.369556,
+        "constant": 0.5,
+        "nano": 0.281864,
+        "random": 0.358927,
+        "grid": 0.324304,
+        "nano_u": 0.223464,
+        "nano_ud": 0.262308,
+        "nano_un": 0.282538,
+        "nano_dn": 0.281566
+      }
+    },
+    {
+      "wafer_id": "wm811k-249130",
+      "pattern": "Near-full",
+      "seed": 1,
+      "n_dies": 549,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.369556,
+        "constant": 0.5,
+        "nano": 0.316068,
+        "random": 0.36565,
+        "grid": 0.318108,
+        "nano_u": 0.268886,
+        "nano_ud": 0.310412,
+        "nano_un": 0.212708,
+        "nano_dn": 0.267701
+      }
+    },
+    {
+      "wafer_id": "wm811k-249130",
+      "pattern": "Near-full",
+      "seed": 2,
+      "n_dies": 549,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.369556,
+        "constant": 0.5,
+        "nano": 0.228185,
+        "random": 0.432846,
+        "grid": 0.319036,
+        "nano_u": 0.222833,
+        "nano_ud": 0.247471,
+        "nano_un": 0.280106,
+        "nano_dn": 0.227251
+      }
+    },
+    {
+      "wafer_id": "wm811k-249130",
+      "pattern": "Near-full",
+      "seed": 3,
+      "n_dies": 549,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.369556,
+        "constant": 0.5,
+        "nano": 0.271449,
+        "random": 0.280368,
+        "grid": 0.24599,
+        "nano_u": 0.222448,
+        "nano_ud": 0.250831,
+        "nano_un": 0.310796,
+        "nano_dn": 0.323092
+      }
+    },
+    {
+      "wafer_id": "wm811k-249130",
+      "pattern": "Near-full",
+      "seed": 4,
+      "n_dies": 549,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.369556,
+        "constant": 0.5,
+        "nano": 0.371721,
+        "random": 0.415114,
+        "grid": 0.328996,
+        "nano_u": 0.222813,
+        "nano_ud": 0.288978,
+        "nano_un": 0.325313,
+        "nano_dn": 0.370738
+      }
+    },
+    {
+      "wafer_id": "wm811k-255187",
+      "pattern": "Center",
+      "seed": 0,
+      "n_dies": 1389,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.306118,
+        "constant": 0.5,
+        "nano": 0.266221,
+        "random": 0.267123,
+        "grid": 0.273154,
+        "nano_u": 0.259229,
+        "nano_ud": 0.264258,
+        "nano_un": 0.261473,
+        "nano_dn": 0.264565
+      }
+    },
+    {
+      "wafer_id": "wm811k-255187",
+      "pattern": "Center",
+      "seed": 1,
+      "n_dies": 1389,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.306118,
+        "constant": 0.5,
+        "nano": 0.239642,
+        "random": 0.262596,
+        "grid": 0.274214,
+        "nano_u": 0.259676,
+        "nano_ud": 0.254889,
+        "nano_un": 0.265926,
+        "nano_dn": 0.254793
+      }
+    },
+    {
+      "wafer_id": "wm811k-255187",
+      "pattern": "Center",
+      "seed": 2,
+      "n_dies": 1389,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.306118,
+        "constant": 0.5,
+        "nano": 0.262511,
+        "random": 0.265449,
+        "grid": 0.273503,
+        "nano_u": 0.253432,
+        "nano_ud": 0.253247,
+        "nano_un": 0.26638,
+        "nano_dn": 0.260248
+      }
+    },
+    {
+      "wafer_id": "wm811k-255187",
+      "pattern": "Center",
+      "seed": 3,
+      "n_dies": 1389,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.306118,
+        "constant": 0.5,
+        "nano": 0.267527,
+        "random": 0.279227,
+        "grid": 0.27924,
+        "nano_u": 0.263758,
+        "nano_ud": 0.271635,
+        "nano_un": 0.278829,
+        "nano_dn": 0.262962
+      }
+    },
+    {
+      "wafer_id": "wm811k-255187",
+      "pattern": "Center",
+      "seed": 4,
+      "n_dies": 1389,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.306118,
+        "constant": 0.5,
+        "nano": 0.24135,
+        "random": 0.269149,
+        "grid": 0.267129,
+        "nano_u": 0.247712,
+        "nano_ud": 0.238121,
+        "nano_un": 0.254641,
+        "nano_dn": 0.242746
+      }
+    },
+    {
+      "wafer_id": "wm811k-276024",
+      "pattern": "Edge-Ring",
+      "seed": 0,
+      "n_dies": 7777,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.455081,
+        "constant": 0.5,
+        "nano": 0.36311,
+        "random": 0.40508,
+        "grid": 0.407739,
+        "nano_u": 0.341053,
+        "nano_ud": 0.343222,
+        "nano_un": 0.367083,
+        "nano_dn": 0.362843
+      }
+    },
+    {
+      "wafer_id": "wm811k-276024",
+      "pattern": "Edge-Ring",
+      "seed": 1,
+      "n_dies": 7777,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.455081,
+        "constant": 0.5,
+        "nano": 0.3563,
+        "random": 0.426852,
+        "grid": 0.413173,
+        "nano_u": 0.338517,
+        "nano_ud": 0.336845,
+        "nano_un": 0.366944,
+        "nano_dn": 0.359854
+      }
+    },
+    {
+      "wafer_id": "wm811k-276024",
+      "pattern": "Edge-Ring",
+      "seed": 2,
+      "n_dies": 7777,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.455081,
+        "constant": 0.5,
+        "nano": 0.354722,
+        "random": 0.424441,
+        "grid": 0.404306,
+        "nano_u": 0.339607,
+        "nano_ud": 0.327552,
+        "nano_un": 0.364497,
+        "nano_dn": 0.364336
+      }
+    },
+    {
+      "wafer_id": "wm811k-276024",
+      "pattern": "Edge-Ring",
+      "seed": 3,
+      "n_dies": 7777,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.455081,
+        "constant": 0.5,
+        "nano": 0.364335,
+        "random": 0.431026,
+        "grid": 0.414604,
+        "nano_u": 0.344358,
+        "nano_ud": 0.359986,
+        "nano_un": 0.372712,
+        "nano_dn": 0.365398
+      }
+    },
+    {
+      "wafer_id": "wm811k-276024",
+      "pattern": "Edge-Ring",
+      "seed": 4,
+      "n_dies": 7777,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.455081,
+        "constant": 0.5,
+        "nano": 0.359973,
+        "random": 0.42826,
+        "grid": 0.401563,
+        "nano_u": 0.338298,
+        "nano_ud": 0.340564,
+        "nano_un": 0.360513,
+        "nano_dn": 0.361583
+      }
+    },
+    {
+      "wafer_id": "wm811k-279039",
+      "pattern": "Donut",
+      "seed": 0,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.401227,
+        "constant": 0.5,
+        "nano": 0.339722,
+        "random": 0.359505,
+        "grid": 0.363979,
+        "nano_u": 0.368302,
+        "nano_ud": 0.348432,
+        "nano_un": 0.348846,
+        "nano_dn": 0.344036
+      }
+    },
+    {
+      "wafer_id": "wm811k-279039",
+      "pattern": "Donut",
+      "seed": 1,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.401227,
+        "constant": 0.5,
+        "nano": 0.362484,
+        "random": 0.338323,
+        "grid": 0.349946,
+        "nano_u": 0.349424,
+        "nano_ud": 0.339034,
+        "nano_un": 0.35646,
+        "nano_dn": 0.347896
+      }
+    },
+    {
+      "wafer_id": "wm811k-279039",
+      "pattern": "Donut",
+      "seed": 2,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.401227,
+        "constant": 0.5,
+        "nano": 0.336739,
+        "random": 0.366101,
+        "grid": 0.344718,
+        "nano_u": 0.366712,
+        "nano_ud": 0.348438,
+        "nano_un": 0.362413,
+        "nano_dn": 0.338039
+      }
+    },
+    {
+      "wafer_id": "wm811k-279039",
+      "pattern": "Donut",
+      "seed": 3,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.401227,
+        "constant": 0.5,
+        "nano": 0.327924,
+        "random": 0.351731,
+        "grid": 0.338347,
+        "nano_u": 0.316474,
+        "nano_ud": 0.3083,
+        "nano_un": 0.333927,
+        "nano_dn": 0.332681
+      }
+    },
+    {
+      "wafer_id": "wm811k-279039",
+      "pattern": "Donut",
+      "seed": 4,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.401227,
+        "constant": 0.5,
+        "nano": 0.333437,
+        "random": 0.345801,
+        "grid": 0.351881,
+        "nano_u": 0.352504,
+        "nano_ud": 0.351418,
+        "nano_un": 0.341119,
+        "nano_dn": 0.34014
+      }
+    },
+    {
+      "wafer_id": "wm811k-279768",
+      "pattern": "Donut",
+      "seed": 0,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.408745,
+        "constant": 0.5,
+        "nano": 0.334384,
+        "random": 0.352934,
+        "grid": 0.350049,
+        "nano_u": 0.347649,
+        "nano_ud": 0.345317,
+        "nano_un": 0.356877,
+        "nano_dn": 0.341378
+      }
+    },
+    {
+      "wafer_id": "wm811k-279768",
+      "pattern": "Donut",
+      "seed": 1,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.408745,
+        "constant": 0.5,
+        "nano": 0.331518,
+        "random": 0.336798,
+        "grid": 0.342502,
+        "nano_u": 0.349454,
+        "nano_ud": 0.342917,
+        "nano_un": 0.339012,
+        "nano_dn": 0.329636
+      }
+    },
+    {
+      "wafer_id": "wm811k-279768",
+      "pattern": "Donut",
+      "seed": 2,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.408745,
+        "constant": 0.5,
+        "nano": 0.329549,
+        "random": 0.353551,
+        "grid": 0.337375,
+        "nano_u": 0.331666,
+        "nano_ud": 0.34386,
+        "nano_un": 0.329579,
+        "nano_dn": 0.332781
+      }
+    },
+    {
+      "wafer_id": "wm811k-279768",
+      "pattern": "Donut",
+      "seed": 3,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.408745,
+        "constant": 0.5,
+        "nano": 0.329636,
+        "random": 0.348477,
+        "grid": 0.349888,
+        "nano_u": 0.340393,
+        "nano_ud": 0.34615,
+        "nano_un": 0.332781,
+        "nano_dn": 0.355935
+      }
+    },
+    {
+      "wafer_id": "wm811k-279768",
+      "pattern": "Donut",
+      "seed": 4,
+      "n_dies": 1334,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.408745,
+        "constant": 0.5,
+        "nano": 0.359904,
+        "random": 0.350893,
+        "grid": 0.339588,
+        "nano_u": 0.365033,
+        "nano_ud": 0.344721,
+        "nano_un": 0.345471,
+        "nano_dn": 0.371459
+      }
+    },
+    {
+      "wafer_id": "wm811k-627870",
+      "pattern": "Center",
+      "seed": 0,
+      "n_dies": 733,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.410542,
+        "constant": 0.5,
+        "nano": 0.341186,
+        "random": 0.332118,
+        "grid": 0.335652,
+        "nano_u": 0.336634,
+        "nano_ud": 0.340072,
+        "nano_un": 0.343834,
+        "nano_dn": 0.336074
+      }
+    },
+    {
+      "wafer_id": "wm811k-627870",
+      "pattern": "Center",
+      "seed": 1,
+      "n_dies": 733,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.410542,
+        "constant": 0.5,
+        "nano": 0.350622,
+        "random": 0.361555,
+        "grid": 0.35584,
+        "nano_u": 0.359088,
+        "nano_ud": 0.371571,
+        "nano_un": 0.348158,
+        "nano_dn": 0.349316
+      }
+    },
+    {
+      "wafer_id": "wm811k-627870",
+      "pattern": "Center",
+      "seed": 2,
+      "n_dies": 733,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.410542,
+        "constant": 0.5,
+        "nano": 0.321061,
+        "random": 0.344647,
+        "grid": 0.344224,
+        "nano_u": 0.33956,
+        "nano_ud": 0.346861,
+        "nano_un": 0.337606,
+        "nano_dn": 0.32668
+      }
+    },
+    {
+      "wafer_id": "wm811k-627870",
+      "pattern": "Center",
+      "seed": 3,
+      "n_dies": 733,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.410542,
+        "constant": 0.5,
+        "nano": 0.312465,
+        "random": 0.328239,
+        "grid": 0.330241,
+        "nano_u": 0.312946,
+        "nano_ud": 0.320787,
+        "nano_un": 0.332202,
+        "nano_dn": 0.317679
+      }
+    },
+    {
+      "wafer_id": "wm811k-627870",
+      "pattern": "Center",
+      "seed": 4,
+      "n_dies": 733,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.410542,
+        "constant": 0.5,
+        "nano": 0.331526,
+        "random": 0.33342,
+        "grid": 0.343474,
+        "nano_u": 0.343189,
+        "nano_ud": 0.334063,
+        "nano_un": 0.334833,
+        "nano_dn": 0.33505
+      }
+    },
+    {
+      "wafer_id": "wm811k-645735",
+      "pattern": "Edge-Ring",
+      "seed": 0,
+      "n_dies": 533,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475783,
+        "constant": 0.5,
+        "nano": 0.324163,
+        "random": 0.359298,
+        "grid": 0.355498,
+        "nano_u": 0.315196,
+        "nano_ud": 0.334358,
+        "nano_un": 0.339881,
+        "nano_dn": 0.322875
+      }
+    },
+    {
+      "wafer_id": "wm811k-645735",
+      "pattern": "Edge-Ring",
+      "seed": 1,
+      "n_dies": 533,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475783,
+        "constant": 0.5,
+        "nano": 0.300626,
+        "random": 0.398201,
+        "grid": 0.358897,
+        "nano_u": 0.298884,
+        "nano_ud": 0.302938,
+        "nano_un": 0.329067,
+        "nano_dn": 0.309222
+      }
+    },
+    {
+      "wafer_id": "wm811k-645735",
+      "pattern": "Edge-Ring",
+      "seed": 2,
+      "n_dies": 533,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475783,
+        "constant": 0.5,
+        "nano": 0.316759,
+        "random": 0.351167,
+        "grid": 0.378754,
+        "nano_u": 0.317537,
+        "nano_ud": 0.333059,
+        "nano_un": 0.343298,
+        "nano_dn": 0.330495
+      }
+    },
+    {
+      "wafer_id": "wm811k-645735",
+      "pattern": "Edge-Ring",
+      "seed": 3,
+      "n_dies": 533,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475783,
+        "constant": 0.5,
+        "nano": 0.309749,
+        "random": 0.389513,
+        "grid": 0.370163,
+        "nano_u": 0.312546,
+        "nano_ud": 0.321718,
+        "nano_un": 0.31809,
+        "nano_dn": 0.309635
+      }
+    },
+    {
+      "wafer_id": "wm811k-645735",
+      "pattern": "Edge-Ring",
+      "seed": 4,
+      "n_dies": 533,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475783,
+        "constant": 0.5,
+        "nano": 0.300822,
+        "random": 0.337284,
+        "grid": 0.371084,
+        "nano_u": 0.305162,
+        "nano_ud": 0.307407,
+        "nano_un": 0.322819,
+        "nano_dn": 0.311607
+      }
+    },
+    {
+      "wafer_id": "wm811k-650464",
+      "pattern": "Edge-Loc",
+      "seed": 0,
+      "n_dies": 776,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.488789,
+        "constant": 0.5,
+        "nano": 0.384303,
+        "random": 0.425488,
+        "grid": 0.402607,
+        "nano_u": 0.37116,
+        "nano_ud": 0.422398,
+        "nano_un": 0.414925,
+        "nano_dn": 0.403621
+      }
+    },
+    {
+      "wafer_id": "wm811k-650464",
+      "pattern": "Edge-Loc",
+      "seed": 1,
+      "n_dies": 776,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.488789,
+        "constant": 0.5,
+        "nano": 0.388974,
+        "random": 0.420944,
+        "grid": 0.401332,
+        "nano_u": 0.386787,
+        "nano_ud": 0.422802,
+        "nano_un": 0.395213,
+        "nano_dn": 0.401487
+      }
+    },
+    {
+      "wafer_id": "wm811k-650464",
+      "pattern": "Edge-Loc",
+      "seed": 2,
+      "n_dies": 776,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.488789,
+        "constant": 0.5,
+        "nano": 0.378648,
+        "random": 0.41693,
+        "grid": 0.40272,
+        "nano_u": 0.378785,
+        "nano_ud": 0.378067,
+        "nano_un": 0.409705,
+        "nano_dn": 0.382964
+      }
+    },
+    {
+      "wafer_id": "wm811k-650464",
+      "pattern": "Edge-Loc",
+      "seed": 3,
+      "n_dies": 776,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.488789,
+        "constant": 0.5,
+        "nano": 0.377249,
+        "random": 0.409097,
+        "grid": 0.406498,
+        "nano_u": 0.381063,
+        "nano_ud": 0.391871,
+        "nano_un": 0.381979,
+        "nano_dn": 0.391387
+      }
+    },
+    {
+      "wafer_id": "wm811k-650464",
+      "pattern": "Edge-Loc",
+      "seed": 4,
+      "n_dies": 776,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.488789,
+        "constant": 0.5,
+        "nano": 0.405446,
+        "random": 0.393719,
+        "grid": 0.395317,
+        "nano_u": 0.375124,
+        "nano_ud": 0.382326,
+        "nano_un": 0.400206,
+        "nano_dn": 0.401997
+      }
+    },
+    {
+      "wafer_id": "wm811k-683097",
+      "pattern": "Scratch",
+      "seed": 0,
+      "n_dies": 845,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.468457,
+        "constant": 0.5,
+        "nano": 0.390357,
+        "random": 0.39412,
+        "grid": 0.411505,
+        "nano_u": 0.382644,
+        "nano_ud": 0.376713,
+        "nano_un": 0.401075,
+        "nano_dn": 0.387458
+      }
+    },
+    {
+      "wafer_id": "wm811k-683097",
+      "pattern": "Scratch",
+      "seed": 1,
+      "n_dies": 845,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.468457,
+        "constant": 0.5,
+        "nano": 0.389695,
+        "random": 0.407291,
+        "grid": 0.413228,
+        "nano_u": 0.383126,
+        "nano_ud": 0.378083,
+        "nano_un": 0.386447,
+        "nano_dn": 0.384671
+      }
+    },
+    {
+      "wafer_id": "wm811k-683097",
+      "pattern": "Scratch",
+      "seed": 2,
+      "n_dies": 845,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.468457,
+        "constant": 0.5,
+        "nano": 0.415445,
+        "random": 0.418457,
+        "grid": 0.41536,
+        "nano_u": 0.407158,
+        "nano_ud": 0.40292,
+        "nano_un": 0.427276,
+        "nano_dn": 0.413761
+      }
+    },
+    {
+      "wafer_id": "wm811k-683097",
+      "pattern": "Scratch",
+      "seed": 3,
+      "n_dies": 845,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.468457,
+        "constant": 0.5,
+        "nano": 0.398534,
+        "random": 0.396282,
+        "grid": 0.410151,
+        "nano_u": 0.38362,
+        "nano_ud": 0.383423,
+        "nano_un": 0.412552,
+        "nano_dn": 0.392262
+      }
+    },
+    {
+      "wafer_id": "wm811k-683097",
+      "pattern": "Scratch",
+      "seed": 4,
+      "n_dies": 845,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.468457,
+        "constant": 0.5,
+        "nano": 0.397486,
+        "random": 0.433947,
+        "grid": 0.411555,
+        "nano_u": 0.39158,
+        "nano_ud": 0.380918,
+        "nano_un": 0.415658,
+        "nano_dn": 0.390339
+      }
+    },
+    {
+      "wafer_id": "wm811k-797319",
+      "pattern": "Loc",
+      "seed": 0,
+      "n_dies": 562,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475668,
+        "constant": 0.5,
+        "nano": 0.326118,
+        "random": 0.367756,
+        "grid": 0.37763,
+        "nano_u": 0.307306,
+        "nano_ud": 0.326175,
+        "nano_un": 0.336744,
+        "nano_dn": 0.325718
+      }
+    },
+    {
+      "wafer_id": "wm811k-797319",
+      "pattern": "Loc",
+      "seed": 1,
+      "n_dies": 562,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475668,
+        "constant": 0.5,
+        "nano": 0.319936,
+        "random": 0.384635,
+        "grid": 0.384256,
+        "nano_u": 0.312973,
+        "nano_ud": 0.332902,
+        "nano_un": 0.356204,
+        "nano_dn": 0.338409
+      }
+    },
+    {
+      "wafer_id": "wm811k-797319",
+      "pattern": "Loc",
+      "seed": 2,
+      "n_dies": 562,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475668,
+        "constant": 0.5,
+        "nano": 0.341296,
+        "random": 0.407242,
+        "grid": 0.396833,
+        "nano_u": 0.314772,
+        "nano_ud": 0.329257,
+        "nano_un": 0.351225,
+        "nano_dn": 0.331915
+      }
+    },
+    {
+      "wafer_id": "wm811k-797319",
+      "pattern": "Loc",
+      "seed": 3,
+      "n_dies": 562,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475668,
+        "constant": 0.5,
+        "nano": 0.333154,
+        "random": 0.414816,
+        "grid": 0.391018,
+        "nano_u": 0.333459,
+        "nano_ud": 0.338187,
+        "nano_un": 0.351712,
+        "nano_dn": 0.353402
+      }
+    },
+    {
+      "wafer_id": "wm811k-797319",
+      "pattern": "Loc",
+      "seed": 4,
+      "n_dies": 562,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.475668,
+        "constant": 0.5,
+        "nano": 0.312335,
+        "random": 0.375097,
+        "grid": 0.377247,
+        "nano_u": 0.330766,
+        "nano_ud": 0.333399,
+        "nano_un": 0.368082,
+        "nano_dn": 0.319554
+      }
+    },
+    {
+      "wafer_id": "wm811k-809662",
+      "pattern": "Edge-Loc",
+      "seed": 0,
+      "n_dies": 1060,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.484288,
+        "constant": 0.5,
+        "nano": 0.406339,
+        "random": 0.424216,
+        "grid": 0.416326,
+        "nano_u": 0.374203,
+        "nano_ud": 0.424157,
+        "nano_un": 0.415882,
+        "nano_dn": 0.440925
+      }
+    },
+    {
+      "wafer_id": "wm811k-809662",
+      "pattern": "Edge-Loc",
+      "seed": 1,
+      "n_dies": 1060,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.484288,
+        "constant": 0.5,
+        "nano": 0.378301,
+        "random": 0.427338,
+        "grid": 0.425939,
+        "nano_u": 0.386449,
+        "nano_ud": 0.379276,
+        "nano_un": 0.410564,
+        "nano_dn": 0.385874
+      }
+    },
+    {
+      "wafer_id": "wm811k-809662",
+      "pattern": "Edge-Loc",
+      "seed": 2,
+      "n_dies": 1060,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.484288,
+        "constant": 0.5,
+        "nano": 0.381437,
+        "random": 0.448124,
+        "grid": 0.421115,
+        "nano_u": 0.383044,
+        "nano_ud": 0.452137,
+        "nano_un": 0.419903,
+        "nano_dn": 0.420577
+      }
+    },
+    {
+      "wafer_id": "wm811k-809662",
+      "pattern": "Edge-Loc",
+      "seed": 3,
+      "n_dies": 1060,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.484288,
+        "constant": 0.5,
+        "nano": 0.383786,
+        "random": 0.462046,
+        "grid": 0.434695,
+        "nano_u": 0.378369,
+        "nano_ud": 0.448411,
+        "nano_un": 0.408727,
+        "nano_dn": 0.437743
+      }
+    },
+    {
+      "wafer_id": "wm811k-809662",
+      "pattern": "Edge-Loc",
+      "seed": 4,
+      "n_dies": 1060,
+      "prior_error": 0.507402,
+      "final": {
+        "prior": 0.484288,
+        "constant": 0.5,
+        "nano": 0.382391,
+        "random": 0.439991,
+        "grid": 0.411868,
+        "nano_u": 0.38328,
+        "nano_ud": 0.388192,
+        "nano_un": 0.393409,
+        "nano_dn": 0.37622
+      }
+    }
+  ],
+  "assets": {
+    "calibration": "results/calibration.svg",
+    "error_curve": "results/error_curve.svg",
+    "wafer_comparison": "results/wafer_comparison.webp",
+    "wafer_comparison_weakest": "results/wafer_comparison_weakest.webp",
+    "uncertainty_before_after": "results/uncertainty_before_after.webp",
+    "paired_improvement": "results/paired_improvement.svg"
+  },
+  "figures": {
+    "illustrative": {
+      "wafer_id": "wm811k-645735",
+      "pattern": "Edge-Ring",
+      "n_dies": 533,
+      "episodes": 5,
+      "prior": 0.475783,
+      "nano": 0.310424,
+      "best_baseline": 0.366879,
+      "gain_over_prior": 0.165359,
+      "margin_over_baselines": 0.056455,
+      "criterion": "largest mean reduction of the uncorrected prior's error"
+    },
+    "weakest": {
+      "wafer_id": "wm811k-19423",
+      "pattern": "Random",
+      "n_dies": 1349,
+      "episodes": 5,
+      "prior": 0.507402,
+      "nano": 0.448344,
+      "best_baseline": 0.444368,
+      "gain_over_prior": 0.059058,
+      "margin_over_baselines": -0.003977,
+      "criterion": "smallest mean margin over the better of Random and Grid"
+    },
+    "note": "One wafer is an illustration, not a result. The scored table covers all 12 evaluation wafers; these two are drawn because the mechanism is clearest on one and weakest on the other.",
+    "seed": 0
+  }
+}

@@ -22,8 +22,8 @@ Ranking for Large-Scale Data Sets"*, IEEE Transactions on Semiconductor Manufact
 ::: tip 구현 상태
 서브셋 빌더는 `python -m nano.subset`, 하네스는 `python -m nano.benchmark`다. 아래에서
 `recorded at run time`이라고 적힌 항목은 이 페이지에서 의도적으로 비워 둔 것이다. 손으로 입력하는
-값이 아니라 실행이 만들어 내는 산출물에서 채워지며, 이 저장소는 아직 WM-811K에 대한 실행 결과를
-게시하지 않았다.
+값이 아니라 실행이 만들어 내는 산출물에서 채워진다. 게시된 실행은 로컬 `LSWMD.pkl`에서 이 빌더가
+뽑아 `data/subsets/wm811k_eval.json`에 기록한 웨이퍼 12장을 사용했다.
 
 데이터셋 사본이 없어도 파이프라인은 생성된 대체 웨이퍼(`--synthetic`)로 실행된다. 그것은
 WM-811K가 **아니다**. 결과 파일은 `dataset.name`을 `synthetic-wafers`로 기록하고 주석을 남기며,

@@ -62,8 +62,8 @@ source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
 pytest                                        # 테스트 스위트, 데이터셋 불필요
-python -m nano.demo --wafer 0 --seed 0        # 단일 에피소드, 데모 그림을 기록
-python -m nano.benchmark --seeds 0 1 2 3 4    # 전체 비교, 결과 파일을 기록
+python -m nano.demo --wafer wm811k-645735 --seed 0    # 게시된 에피소드, 데모 그림을 기록
+python -m nano.benchmark --seeds 0 1 2 3 4 --ablation # 전체 비교, 결과 파일을 기록
 ```
 
 `pip install -e .`만 실행하면 numpy만 설치되며, 루프와 벤치마크를 돌리기에는 그것으로 충분하다.
@@ -107,6 +107,33 @@ data/
 | 오차 곡선, 웨이퍼 비교, 불확실성 맵 | `results/*.svg`, `results/*.webp` |
 | 데모 기록 | `results/demo.gif` |
 | 게시된 그림의 사이트 사본 | `docs/public/results/` |
+| 버전 관리되는 평가 인덱스 | `data/subsets/wm811k_eval.json` |
+
+벤치마크를 다시 돌리지 않고 그림만 하나씩 다시 생성할 수도 있다.
+
+```bash
+python scripts/plot_wafer_comparison.py --wafer wm811k-645735 --seed 0
+python scripts/plot_uncertainty.py --wafer wm811k-645735 --seed 0
+python scripts/plot_paired_improvement.py          # 결과 파일을 읽는다
+python scripts/plot_calibration.py                 # 결과 파일을 읽는다
+python scripts/record_demo.py --wafer wm811k-645735 --seed 0
+```
+
+`--wafer`는 웨이퍼 id 또는 위치 인덱스를 받는다. 믿을 수 있는 쪽은 id다. 인덱스는 평가 세트가 바뀌는
+순간 다른 웨이퍼를 가리키게 되며, 게시된 그림이 id로 웨이퍼를 지목하는 이유가 그것이다. 게시된 그림이
+어느 웨이퍼인지는 이 페이지에서 정하는 것이 아니라, 그것을 고른 규칙과 함께
+`results/benchmark_summary.json`의 `figures`에 기록된다.
+
+```bash
+python -m nano.benchmark --seeds 0 1 2 3 4                              # 두 그림 웨이퍼를 모두 고른다
+python -m nano.benchmark --seeds 0 1 2 3 4 --figure-wafer wm811k-19423   # 첫 번째만 바꾼다
+```
+
+벤치마크는 선택이 Random·Grid 대비 가장 적게 벌어들인 웨이퍼도 항상 함께 그리며, `--figure-wafer`로
+그 웨이퍼를 바꿀 수는 없다.
+
+그림은 결과 파일을 따라간다. `--out`을 다른 곳으로 지정하면 그 실행의 그림도 그 옆에 기록되므로,
+확인용 실행이 `results/`에 있는 다른 실행의 숫자 옆에 자기 그림을 남기는 일은 일어나지 않는다.
 
 ### 시드 제어하기
 

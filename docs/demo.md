@@ -9,14 +9,14 @@ This page is static by design. GitHub Pages serves files, not Python, so the dem
 recording of a real run rather than a live one. The interactive version runs locally — see
 [Reproduce](./reproducibility).
 
-::: warning No published recording yet
-The demo is implemented — `python -m nano.demo --wafer 0 --seed 0` prints the decision trace and
-writes every figure below — but no recording from a WM-811K run is published here. Each block states
-which artifact it is waiting for, and nothing is illustrated with a stand-in that could be mistaken
-for a real run.
+::: tip Recorded from a real run
+Every figure below is one episode on `wm811k-645735` (Edge-Ring, 533 dies), seed 0, recorded with
+`python -m nano.demo --wafer wm811k-645735 --seed 0` against WM-811K. One wafer, chosen because the
+mechanism is clearest on it — the [benchmark](./benchmark) scores all twelve and publishes the
+weakest wafer beside the best one.
 
-Run it locally and the figures appear; `npm run sync:assets` publishes them to a local build of this
-site.
+Re-run it locally and the figures regenerate; `npm run sync:assets` publishes them to a local build
+of this site.
 :::
 
 ## The schematic version
@@ -61,8 +61,16 @@ already sampled. A choice that cannot be explained by those three numbers is a b
 The command prints the same decomposition as text, one line per measurement:
 
 ```text
-m= 22  die   472  score 0.2551  [uncertainty=0.797 disagreement=0.572 novelty=0.559]  measured 0
+m= 20  die   188  score 0.5179  [uncertainty=1.000 disagreement=0.518 novelty=1.000]  measured 0
+m= 21  die     1  score 0.4861  [uncertainty=1.000 disagreement=0.486 novelty=1.000]  measured 0
+m= 22  die   369  score 0.4565  [uncertainty=1.000 disagreement=0.457 novelty=1.000]  measured 1
 ```
+
+Read those three lines closely and they say something the design does not: this far from a
+centre-biased initial mask, uncertainty and novelty are both pinned at 1.0, so the score *is* the
+disagreement term and the other two order nothing. Whether the three-term product earns its terms is
+exactly what the [ablation](./benchmark#does-each-term-of-the-acquisition-rule-earn-its-place)
+measures, and on WM-811K the answer is not the one the design assumes.
 
 <ResultAsset
   file="demo_selection.webp"
