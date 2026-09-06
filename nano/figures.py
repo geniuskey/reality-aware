@@ -181,10 +181,20 @@ def plot_calibration(summary: dict, path: Path | str) -> Path:
 
 
 def plot_wafer_comparison(
-    record: WaferRecord, prior: np.ndarray, episode: EpisodeResult, path: Path | str
+    record: WaferRecord,
+    prior: np.ndarray,
+    episode: EpisodeResult,
+    path: Path | str,
+    *,
+    note: str | None = None,
 ) -> Path:
-    """Biased prior, NANO reconstruction and hidden ground truth on a common scale."""
-    fig, axes = plt.subplots(1, 3, figsize=(10.5, 3.9))
+    """Biased prior, NANO reconstruction and hidden ground truth on a common scale.
+
+    ``note`` says why this wafer is the one on the page. A single-wafer figure
+    invites being read as typical, so the reason it was picked belongs on the
+    image itself rather than only in a caption someone can crop away.
+    """
+    fig, axes = plt.subplots(1, 3, figsize=(10.5, 4.1))
     _panel(axes[0], record, prior, "Biased prior (simulation)", cmap=PREDICTION_CMAP)
     image = _panel(axes[1], record, episode.prediction, "NANO reconstruction", cmap=PREDICTION_CMAP)
     _mark_measured(axes[1], record, episode.observed_mask)
@@ -195,15 +205,23 @@ def plot_wafer_comparison(
         f"{episode.n_initial} initial + {episode.budget} measured",
         fontsize=10,
     )
+    _selection_note(fig, note)
     return save(fig, path)
 
 
+def _selection_note(fig, note: str | None) -> None:
+    """Print why this wafer was drawn, under the title, in smaller grey type."""
+    if not note:
+        return
+    fig.text(0.5, 0.885, note, ha="center", va="top", fontsize=7.5, color="#666666")
+
+
 def plot_uncertainty_before_after(
-    record: WaferRecord, episode: EpisodeResult, path: Path | str
+    record: WaferRecord, episode: EpisodeResult, path: Path | str, *, note: str | None = None
 ) -> Path:
     """Where the agent knew it was blind, before and after spending the budget."""
     first, last = episode.steps[0], episode.steps[-1]
-    fig, axes = plt.subplots(1, 2, figsize=(7.6, 3.9))
+    fig, axes = plt.subplots(1, 2, figsize=(7.6, 4.1))
     _panel(axes[0], record, first.uncertainty, f"Uncertainty at {first.measurements} measurements",
            cmap=UNCERTAINTY_CMAP)
     image = _panel(axes[1], record, last.uncertainty,
@@ -211,6 +229,7 @@ def plot_uncertainty_before_after(
     _mark_measured(axes[1], record, episode.observed_mask, color="#ff5c5c")
     fig.colorbar(image, ax=axes, fraction=0.03, pad=0.02, label="uncertainty (relative)")
     fig.suptitle(f"{record.wafer_id} · uncertainty collapse over one budget", fontsize=10)
+    _selection_note(fig, note)
     return save(fig, path)
 
 

@@ -6,8 +6,16 @@ import argparse
 from pathlib import Path
 
 from nano.agent import draw_initial_mask, run_episode
-from nano.cli import RESULTS_DIR, add_experiment_args, add_source_args, resolve_wafers, source_warning
-from nano.evaluate import DEFAULT_OUTPUT, run_benchmark, write_summary
+from nano.cli import (
+    RESULTS_DIR,
+    add_experiment_args,
+    add_source_args,
+    resolve_wafer_index,
+    resolve_wafers,
+    source_warning,
+    use_utf8_output,
+)
+from nano.evaluate import DEFAULT_OUTPUT, run_benchmark, select_figure_wafers, write_summary
 from nano.metrics import metric_set
 from nano.model import RealityModel
 from nano.policy import TERMS, AcquisitionPolicy
@@ -29,6 +37,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-figures", action="store_true", help="skip figure generation (numbers only)"
     )
     parser.add_argument(
+        "--figure-wafer",
+        default=None,
+        help=(
+            "wafer id or index to draw the illustrative figure from "
+            "(default: the wafer whose prior error the measurements reduced most). "
+            "The weakest wafer is always drawn as well and cannot be overridden"
+        ),
+    )
+    parser.add_argument(
         "--ablation",
         action="store_true",
         help="also run the acquisition rule with terms dropped, to show what each one is worth",
@@ -37,8 +54,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    use_utf8_output()
     args = build_parser().parse_args(argv)
     records, dataset_block = resolve_wafers(args)
+    if args.figure_wafer is not None:
+        # Fail here rather than after the run: the selector is checkable the
+        # moment the wafers are loaded, and a typo should cost a second.
+        resolve_wafer_index(records, args.figure_wafer, flag="--figure-wafer")
     warning = source_warning(dataset_block)
     if warning:
         print(warning)
@@ -61,15 +83,23 @@ def main(argv: list[str] | None = None) -> int:
         terms=args.terms,
         dataset_block=dataset_block,
     )
+    summary["figures"] = select_figure_wafers(summary, override=args.figure_wafer)
     path = write_summary(summary, args.out)
     _report(summary)
     _report_ablation(summary)
     _report_calibration(summary)
     print(f"wrote {path}")
 
+    # Figures follow the results file. A side run written elsewhere -- a
+    # stand-in check, a different target -- must not overwrite the published
+    # figures, which belong to whatever run wrote results/benchmark_summary.json.
+    figures_dir = Path(path).parent
     if not args.no_figures:
-        _figures(summary, records, args, bias)
-    print("run `npm run sync:assets` to publish figures to the docs site")
+        _figures(summary, records, args, bias, figures_dir)
+    if figures_dir.resolve() == RESULTS_DIR.resolve():
+        print("run `npm run sync:assets` to publish figures to the docs site")
+    else:
+        print(f"figures written beside the results file in {figures_dir}, not to {RESULTS_DIR}")
     return 0
 
 
@@ -147,24 +177,60 @@ def _verdict(comparison: dict) -> str:
     )
 
 
-def _figures(summary: dict, records, args: argparse.Namespace, bias: BiasParams) -> None:
-    """Regenerate the published figures from this run."""
+def _figures(
+    summary: dict, records, args: argparse.Namespace, bias: BiasParams, results_dir: Path
+) -> None:
+    """Regenerate the figures for this run, beside the results file it wrote."""
     try:
         from nano import figures
     except ImportError as exc:
         print(f"  figures skipped: {exc}")
         return
 
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    figures.plot_error_curve(summary, RESULTS_DIR / "error_curve.svg")
-    figures.plot_paired_improvement(summary, RESULTS_DIR / "paired_improvement.svg")
+    results_dir.mkdir(parents=True, exist_ok=True)
+    figures.plot_error_curve(summary, results_dir / "error_curve.svg")
+    figures.plot_paired_improvement(summary, results_dir / "paired_improvement.svg")
     if summary.get("calibration", {}).get("reliability"):
-        figures.plot_calibration(summary, RESULTS_DIR / "calibration.svg")
+        figures.plot_calibration(summary, results_dir / "calibration.svg")
 
-    # One representative episode, re-run with the same seed so the figure shows
-    # exactly what the benchmark scored.
-    record = records[0]
-    seed = args.seeds[0]
+    # Two named episodes, re-run with the benchmark's first seed so each figure
+    # shows exactly what was scored. Which wafer each one is, and why, comes from
+    # the summary rather than from this function, so the caption and the number
+    # cannot drift apart.
+    selection = summary["figures"]
+    seed = int(selection["seed"])
+    by_id = {record.wafer_id: record for record in records}
+    primary = summary["metric"]["key"]
+
+    illustrative = selection["illustrative"]
+    weakest = selection["weakest"]
+    _draw_episode(
+        by_id[illustrative["wafer_id"]], illustrative, args, bias, seed, primary,
+        comparison_path=results_dir / "wafer_comparison.webp",
+        uncertainty_path=results_dir / "uncertainty_before_after.webp",
+    )
+    if weakest["wafer_id"] != illustrative["wafer_id"]:
+        _draw_episode(
+            by_id[weakest["wafer_id"]], weakest, args, bias, seed, primary,
+            comparison_path=results_dir / "wafer_comparison_weakest.webp",
+        )
+    print(f"  {selection['note']}")
+
+
+def _draw_episode(
+    record,
+    choice: dict,
+    args: argparse.Namespace,
+    bias: BiasParams,
+    seed: int,
+    primary: str,
+    *,
+    comparison_path,
+    uncertainty_path=None,
+):
+    """Re-run one named wafer and write its figures, stamped with why it was picked."""
+    from nano import figures
+
     prior = make_biased_prior(record, bias)
     episode = run_episode(
         record,
@@ -177,15 +243,16 @@ def _figures(summary: dict, records, args: argparse.Namespace, bias: BiasParams)
             record.coords, prior, length_scale=args.length_scale, prior_weight=args.prior_weight
         ),
     )
-    figures.plot_wafer_comparison(record, prior, episode, RESULTS_DIR / "wafer_comparison.webp")
-    figures.plot_uncertainty_before_after(record, episode, RESULTS_DIR / "uncertainty_before_after.webp")
-    primary = summary["metric"]["key"]
+    note = f"selected: {choice['criterion']} · seed {seed} · one wafer, not a sample"
+    figures.plot_wafer_comparison(record, prior, episode, comparison_path, note=note)
+    if uncertainty_path is not None:
+        figures.plot_uncertainty_before_after(record, episode, uncertainty_path, note=note)
     score = metric_set(episode.prediction, record.reality, record.target_kind)[primary]
     print(
-        f"  figures written to {RESULTS_DIR}/ "
-        f"(episode figure: {record.wafer_id}, seed {seed}, "
-        f"final {summary['metric']['name']} {score:.4f})"
+        f"  {comparison_path.name}: {record.wafer_id} ({record.pattern}), seed {seed}, "
+        f"final {primary} {score:.4f} — {choice['criterion']}"
     )
+    return episode
 
 
 if __name__ == "__main__":  # pragma: no cover

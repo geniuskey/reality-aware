@@ -22,7 +22,7 @@ from nano.evaluate import mae
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--wafer", type=int, default=0, help="index into the evaluation set")
+    parser.add_argument("--wafer", default="0", help="wafer id, or an index into the evaluation set")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out", type=Path, default=RESULTS_DIR / "wafer_comparison.webp")
     add_source_args(parser)

@@ -19,6 +19,7 @@ const published = [
   'error_curve.svg',
   'calibration.svg',
   'wafer_comparison.webp',
+  'wafer_comparison_weakest.webp',
   'uncertainty_before_after.webp',
   'paired_improvement.svg',
   'demo.gif',

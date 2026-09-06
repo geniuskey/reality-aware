@@ -6,7 +6,15 @@ import numpy as np
 import pytest
 
 from nano.data import synthetic_wafers
-from nano.evaluate import SCHEMA_VERSION, mae, relative_improvement, run_benchmark, write_summary
+from nano.evaluate import (
+    SCHEMA_VERSION,
+    mae,
+    relative_improvement,
+    run_benchmark,
+    select_figure_wafers,
+    wafer_ranking,
+    write_summary,
+)
 
 
 @pytest.fixture(scope="module")
@@ -311,3 +319,53 @@ def test_wafers_of_mixed_target_kinds_are_refused():
     )
     with pytest.raises(ValueError, match="same target kind"):
         run_benchmark(mixed, seeds=[0], initial_measurements=4, budget=4)
+
+
+# --------------------------------------------------------------------------- #
+# Which wafer the figures show
+# --------------------------------------------------------------------------- #
+
+
+def test_the_figure_wafer_is_chosen_by_a_recorded_rule(summary):
+    """A picked wafer is only honest if the picking rule travels with it."""
+    selection = select_figure_wafers(summary)
+    assert selection["illustrative"]["criterion"]
+    assert selection["weakest"]["criterion"]
+    assert selection["seed"] == summary["experiment"]["seeds"][0]
+
+    ranked = wafer_ranking(summary)
+    assert selection["illustrative"]["wafer_id"] == max(
+        ranked, key=lambda item: item["gain_over_prior"]
+    )["wafer_id"]
+    assert selection["weakest"]["wafer_id"] == min(
+        ranked, key=lambda item: item["margin_over_baselines"]
+    )["wafer_id"]
+
+
+def test_the_weakest_wafer_cannot_be_chosen_away(summary):
+    """Overriding the flattering figure must not also silence the unflattering one."""
+    ranked = wafer_ranking(summary)
+    other = min(ranked, key=lambda item: item["gain_over_prior"])["wafer_id"]
+    selection = select_figure_wafers(summary, override=other)
+
+    assert selection["illustrative"]["wafer_id"] == other
+    assert "chosen by hand" in selection["illustrative"]["criterion"]
+    assert selection["weakest"]["wafer_id"] == min(
+        ranked, key=lambda item: item["margin_over_baselines"]
+    )["wafer_id"]
+    assert "chosen by hand" not in selection["weakest"]["criterion"]
+
+
+def test_wafer_ranking_only_describes_episodes_that_were_scored(summary):
+    ranked = wafer_ranking(summary)
+    assert {item["wafer_id"] for item in ranked} == {
+        episode["wafer_id"] for episode in summary["episodes"]
+    }
+    assert sum(item["episodes"] for item in ranked) == len(summary["episodes"])
+    for item in ranked:
+        assert item["gain_over_prior"] == pytest.approx(item["prior"] - item["nano"], abs=1e-6)
+
+
+def test_an_unknown_figure_wafer_is_refused(summary):
+    with pytest.raises(ValueError, match="no evaluation wafer matches"):
+        select_figure_wafers(summary, override="not-a-wafer")

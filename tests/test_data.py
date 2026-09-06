@@ -9,6 +9,7 @@ from nano.data import (
     FAIL,
     OUTSIDE,
     PASS,
+    _normalise_label,
     build_subset,
     load_subset,
     record_from_map,
@@ -51,6 +52,16 @@ def test_synthetic_source_is_deterministic_and_labelled():
         np.testing.assert_array_equal(left.reality, right.reality)
         assert left.source == "synthetic"
     assert not np.array_equal(a[0].reality, synthetic_wafers(3, seed=4)[0].reality)
+
+
+def test_unlabelled_wafers_normalise_to_no_pattern():
+    """Every distribution writes "no pattern" differently; none of them is a class."""
+    assert _normalise_label(np.array([["Center"]], dtype=object)) == "Center"
+    assert _normalise_label("Edge-Ring") == "Edge-Ring"
+    # Kaggle LSWMD.pkl: an empty array. MIR-WM811K: array([0, 0], dtype=uint64).
+    assert _normalise_label(np.array([], dtype=object)) == ""
+    assert _normalise_label(np.array([0, 0], dtype=np.uint64)) == ""
+    assert _normalise_label(0) == ""
 
 
 def test_subset_index_round_trips(tmp_path, fake_lswmd):

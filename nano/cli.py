@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Sequence
 
 import numpy as np
 
@@ -15,6 +17,26 @@ from nano.policy import TERMS, AcquisitionPolicy
 from nano.prior import BiasParams, make_biased_prior
 
 RESULTS_DIR = Path("results")
+
+
+def use_utf8_output() -> None:
+    """Let the reports print their arrows and multiplication signs anywhere.
+
+    Every command here writes ``×``, ``↓`` and ``—`` to stdout. On a Windows
+    console the default encoding is the ANSI code page (cp949 on a Korean
+    install), and printing those characters raises ``UnicodeEncodeError`` —
+    after the results file has already been written, so the run looks failed
+    while its output is intact. Widening the stream is the fix; falling back to
+    ``errors="replace"`` covers a stream that cannot be reconfigured at all.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):  # pragma: no cover - depends on the console
+            pass
 
 
 def add_source_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
@@ -94,6 +116,31 @@ def add_experiment_args(parser: argparse.ArgumentParser) -> argparse.ArgumentPar
     return parser
 
 
+def resolve_wafer_index(
+    records: Sequence[WaferRecord], selector: int | str, *, flag: str = "--wafer"
+) -> int:
+    """Turn ``--wafer`` into a position, accepting a wafer id as well as an index.
+
+    An index is only meaningful next to the subset index that produced it, and it
+    silently means a different wafer the moment the evaluation set changes. A
+    command that names ``wm811k-645735`` still draws the wafer it meant, or fails
+    saying so.
+    """
+    ids = [record.wafer_id for record in records]
+    if isinstance(selector, str) and selector in ids:
+        return ids.index(selector)
+    try:
+        position = int(selector)
+    except (TypeError, ValueError):
+        position = None
+    if position is not None and 0 <= position < len(records):
+        return position
+    raise SystemExit(
+        f"{flag} {selector!r} matches no wafer in an evaluation set of {len(records)}: "
+        f"{', '.join(ids)}"
+    )
+
+
 def resolve_wafers(args: argparse.Namespace) -> tuple[list[WaferRecord], dict]:
     """Load the evaluation wafers plus the dataset block written into the results file."""
     return load_wafers(
@@ -120,7 +167,7 @@ class EpisodeBundle:
 def single_episode(
     args: argparse.Namespace,
     *,
-    wafer_index: int = 0,
+    wafer_index: int | str = 0,
     seed: int = 0,
     policy=None,
     bias: BiasParams | None = None,
@@ -131,9 +178,7 @@ def single_episode(
     from this shows what was scored, not a fresh unrelated run.
     """
     records, dataset = resolve_wafers(args)
-    if not 0 <= wafer_index < len(records):
-        raise SystemExit(f"wafer index {wafer_index} is out of range for {len(records)} wafers")
-    record = records[wafer_index]
+    record = records[resolve_wafer_index(records, wafer_index)]
     prior = make_biased_prior(record, bias or BiasParams())
     model = RealityModel(
         record.coords,

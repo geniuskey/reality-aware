@@ -103,14 +103,25 @@ def record_from_map(
 
 
 def _normalise_label(value: object) -> str:
-    """WM-811K stores labels as nested numpy object arrays more often than as strings."""
+    """WM-811K stores labels as nested numpy object arrays more often than as strings.
+
+    Unlabelled wafers are not written the same way in every distribution: the
+    Kaggle ``LSWMD.pkl`` leaves an empty array, while the MIR-WM811K release
+    stores ``array([0, 0], dtype=uint64)``. Both mean "no pattern here", so a
+    label carrying no letters is read as unlabelled rather than as a class
+    named ``"0"`` — otherwise 638k unlabelled wafers form the largest pattern
+    class in the subset index.
+    """
     while isinstance(value, (list, tuple, np.ndarray)):
         if len(value) == 0:
             return ""
         value = value[0]
     if value is None:
         return ""
-    return str(value).strip()
+    text = str(value).strip()
+    if not any(character.isalpha() for character in text):
+        return ""
+    return text
 
 
 def load_wm811k(raw_path: os.PathLike[str] | str = DEFAULT_RAW_PATH):
@@ -187,7 +198,9 @@ def build_subset(
     index_doc = {
         "schema_version": SUBSET_SCHEMA_VERSION,
         "dataset": "WM-811K",
-        "source_file": str(raw_path),
+        # Recorded with forward slashes so the committed index is byte-identical
+        # whether it was built on Windows or on Linux.
+        "source_file": Path(raw_path).as_posix(),
         "selection": {
             "seed": seed,
             "n_wafers": len(chosen),
@@ -434,7 +447,9 @@ def load_wafers(
     records = load_subset(subset_path, raw_path)[:n_wafers]
     return records, {
         "name": "WM-811K",
-        "subset_file": str(subset_path),
+        # Forward slashes, for the same reason the subset index uses them: the
+        # results file is committed and must not differ by build platform.
+        "subset_file": Path(subset_path).as_posix(),
         "n_wafers": len(records),
         "target": "binary",
     }

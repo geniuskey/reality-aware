@@ -7,7 +7,15 @@ from pathlib import Path
 
 
 from nano.agent import draw_initial_mask, run_episode
-from nano.cli import RESULTS_DIR, add_experiment_args, add_source_args, resolve_wafers, source_warning
+from nano.cli import (
+    RESULTS_DIR,
+    add_experiment_args,
+    add_source_args,
+    resolve_wafer_index,
+    resolve_wafers,
+    source_warning,
+    use_utf8_output,
+)
 from nano.evaluate import mae
 from nano.model import RealityModel
 from nano.policy import TERMS, AcquisitionPolicy
@@ -19,7 +27,9 @@ def build_parser() -> argparse.ArgumentParser:
         prog="python -m nano.demo",
         description="Run a single NANO episode and record what it decided, and why.",
     )
-    parser.add_argument("--wafer", type=int, default=0, help="index into the evaluation set")
+    parser.add_argument(
+        "--wafer", default="0", help="wafer id, or an index into the evaluation set"
+    )
     parser.add_argument("--seed", type=int, default=0, help="episode seed")
     add_source_args(parser)
     add_experiment_args(parser)
@@ -31,15 +41,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    use_utf8_output()
     args = build_parser().parse_args(argv)
     records, dataset_block = resolve_wafers(args)
     warning = source_warning(dataset_block)
     if warning:
         print(warning)
-    if not 0 <= args.wafer < len(records):
-        raise SystemExit(f"--wafer {args.wafer} is out of range for {len(records)} wafers")
-
-    record = records[args.wafer]
+    record = records[resolve_wafer_index(records, args.wafer)]
     prior = make_biased_prior(record, BiasParams())
     policy = AcquisitionPolicy(args.terms or TERMS)
     model = RealityModel(

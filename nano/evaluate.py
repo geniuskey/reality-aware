@@ -289,10 +289,121 @@ def run_benchmark(
             "calibration": "results/calibration.svg",
             "error_curve": "results/error_curve.svg",
             "wafer_comparison": "results/wafer_comparison.webp",
+            "wafer_comparison_weakest": "results/wafer_comparison_weakest.webp",
             "uncertainty_before_after": "results/uncertainty_before_after.webp",
             "paired_improvement": "results/paired_improvement.svg",
         },
     }
+
+
+# --------------------------------------------------------------------------- #
+# Which wafer the figures show
+# --------------------------------------------------------------------------- #
+
+FIGURE_CRITERIA = {
+    "illustrative": "largest mean reduction of the uncorrected prior's error",
+    "weakest": "smallest mean margin over the better of Random and Grid",
+}
+"""How the two published wafer figures are picked, in words the results file carries.
+
+A single-wafer figure is an illustration, not a sample, and until now it was
+whichever wafer happened to sort first — which on the WM-811K subset is the
+``Random`` pattern, the one wafer with no spatial structure for any selection
+rule to exploit. Picking the clearest wafer instead is the honest thing to do
+only if two conditions hold: the criterion is stated rather than eyeballed, and
+the wafer where the rule did *worst* is published beside it. Both are enforced
+here — ``select_figure_wafers`` always returns the pair, and the criterion that
+chose each one travels into ``benchmark_summary.json`` and onto the figure.
+"""
+
+
+def wafer_ranking(summary: dict) -> list[dict]:
+    """Per-wafer aggregates over the episodes already scored, best correction first.
+
+    Everything here is read back out of ``summary["episodes"]`` rather than
+    recomputed, so a figure cannot describe a run other than the one beside it
+    in the results file.
+    """
+    grouped: dict[str, list[dict]] = defaultdict(list)
+    for episode in summary["episodes"]:
+        grouped[episode["wafer_id"]].append(episode)
+
+    ranked: list[dict] = []
+    for wafer_id, group in grouped.items():
+        finals = [entry["final"] for entry in group]
+        prior = float(np.mean([f["prior"] for f in finals]))
+        nano = float(np.mean([f["nano"] for f in finals]))
+        baselines = [
+            float(np.mean([f[name] for f in finals]))
+            for name in ("random", "grid")
+            if all(name in f for f in finals)
+        ]
+        best_baseline = float(min(baselines)) if baselines else float("nan")
+        ranked.append(
+            {
+                "wafer_id": wafer_id,
+                "pattern": group[0]["pattern"],
+                "n_dies": int(group[0]["n_dies"]),
+                "episodes": len(group),
+                "prior": round(prior, 6),
+                "nano": round(nano, 6),
+                "best_baseline": round(best_baseline, 6),
+                # How much simulation error the measurements actually removed.
+                "gain_over_prior": round(prior - nano, 6),
+                # What choosing *where* to measure bought over not choosing.
+                "margin_over_baselines": round(best_baseline - nano, 6),
+            }
+        )
+    ranked.sort(key=lambda item: item["gain_over_prior"], reverse=True)
+    return ranked
+
+
+def select_figure_wafers(summary: dict, *, override: str | None = None) -> dict:
+    """Name the wafer each published figure shows, and say why it was chosen.
+
+    ``override`` accepts a wafer id or an index into the evaluation set and
+    replaces the illustrative pick only; the weakest wafer is never overridable,
+    because the whole point of publishing it is that nobody chose it.
+    """
+    ranked = wafer_ranking(summary)
+    if not ranked:
+        raise ValueError("cannot pick a figure wafer from a summary with no episodes")
+
+    illustrative = ranked[0]
+    weakest = min(ranked, key=lambda item: item["margin_over_baselines"])
+    criteria = dict(FIGURE_CRITERIA)
+
+    if override is not None:
+        illustrative = _resolve_override(ranked, override)
+        criteria["illustrative"] = f"chosen by hand: --figure-wafer {override}"
+
+    return {
+        "illustrative": {**illustrative, "criterion": criteria["illustrative"]},
+        "weakest": {**weakest, "criterion": criteria["weakest"]},
+        "note": (
+            "One wafer is an illustration, not a result. The scored table covers "
+            f"all {len(ranked)} evaluation wafers; these two are drawn because the "
+            "mechanism is clearest on one and weakest on the other."
+        ),
+        "seed": int(summary["experiment"]["seeds"][0]),
+    }
+
+
+def _resolve_override(ranked: list[dict], override: str) -> dict:
+    """Accept either a wafer id or a positional index, and fail loudly on neither."""
+    for item in ranked:
+        if item["wafer_id"] == override:
+            return item
+    try:
+        position = int(override)
+    except ValueError:
+        position = None
+    if position is not None:
+        by_id = sorted(ranked, key=lambda item: item["wafer_id"])
+        if 0 <= position < len(by_id):
+            return by_id[position]
+    known = ", ".join(item["wafer_id"] for item in sorted(ranked, key=lambda i: i["wafer_id"]))
+    raise ValueError(f"no evaluation wafer matches {override!r}; known wafers: {known}")
 
 
 def relative_improvement(baseline: float, nano: float) -> float:

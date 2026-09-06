@@ -27,6 +27,32 @@ def test_benchmark_writes_a_results_file(tmp_path, capsys):
     assert "NANO" in printed
 
 
+def test_a_side_run_does_not_overwrite_the_published_figures(tmp_path, capsys, monkeypatch):
+    """``--out`` elsewhere means figures elsewhere.
+
+    The figures in ``results/`` belong to whatever run wrote
+    ``results/benchmark_summary.json``. A check run pointed at another file must
+    not leave its pictures next to someone else's numbers.
+    """
+    pytest.importorskip("matplotlib")
+    published = tmp_path / "published"
+    published.mkdir()
+    monkeypatch.setattr(benchmark, "RESULTS_DIR", published)
+
+    side = tmp_path / "side"
+    out = side / "benchmark_summary.json"
+    code = benchmark.main(
+        [
+            "--synthetic", "--wafers", "2", "--seeds", "0",
+            "--initial", "8", "--budget", "6", "--out", str(out),
+        ]
+    )
+    assert code == 0
+    assert (side / "error_curve.svg").exists()
+    assert list(published.iterdir()) == []
+    assert "not to" in capsys.readouterr().out
+
+
 def test_demo_prints_a_decision_trace(capsys):
     code = demo.main(
         [
