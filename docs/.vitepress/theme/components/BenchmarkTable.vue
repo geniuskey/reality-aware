@@ -43,7 +43,12 @@ const table = computed(() => {
     budget: exp.measurement_budget,
     prior: summary.prior?.initial_error,
     generated: summary.generated_at,
-    commit: summary.git_commit
+    commit: summary.git_commit,
+    // A run on stand-in wafers writes a note into the results file. It is
+    // printed here rather than dropped, so numbers measured on a stand-in can
+    // never be read as numbers measured on the dataset.
+    dataset: summary.dataset?.name,
+    datasetNote: summary.dataset?.note
   }
 })
 
@@ -95,7 +100,13 @@ const fmt = (v?: number | null, digits = 4) =>
       </table>
     </div>
 
+    <p v-if="table.datasetNote" class="nano-standin">
+      <span class="nano-tag" data-kind="conceptual">{{ t.table.standIn }}</span>
+      {{ table.datasetNote }}
+    </p>
+
     <ul class="nano-table-meta">
+      <li v-if="table.dataset">{{ t.table.metaDataset }}: <code>{{ table.dataset }}</code></li>
       <li>{{ t.table.metaInitial }}: <code>{{ table.initial ?? '—' }}</code></li>
       <li>{{ t.table.metaBudget }}: <code>{{ table.budget ?? '—' }}</code></li>
       <li v-if="table.prior">
@@ -127,6 +138,15 @@ const fmt = (v?: number | null, digits = 4) =>
 table {
   width: 100%;
   border-collapse: collapse;
+}
+
+.nano-standin {
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--nano-gap);
+  background: var(--vp-c-bg-soft);
+  font-size: 0.85rem;
+  line-height: 1.55;
 }
 
 .nano-table-caption {

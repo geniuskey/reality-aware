@@ -103,6 +103,8 @@ const en = {
     // callable rather than a prefix plus a number.
     better: (pct: string) => `NANO better by ${pct}`,
     worse: (pct: string) => `NANO worse by ${pct}`,
+    metaDataset: 'Wafer source',
+    standIn: 'Stand-in wafers',
     metaInitial: 'Initial measurements',
     metaBudget: 'Additional measurement budget',
     metaPrior: 'Simulation prior error before any correction',
@@ -236,6 +238,8 @@ const ko: Strings = {
     reference: '기준',
     better: (pct: string) => `NANO가 ${pct} 더 좋음`,
     worse: (pct: string) => `NANO가 ${pct} 더 나쁨`,
+    metaDataset: '웨이퍼 출처',
+    standIn: '대체 웨이퍼',
     metaInitial: '초기 측정 수',
     metaBudget: '추가 측정 예산',
     metaPrior: '보정 전 시뮬레이션 prior 오차',
