@@ -261,6 +261,7 @@ def load_subset(
 # --------------------------------------------------------------------------- #
 
 SYNTHETIC_PATTERNS = ("Center", "Donut", "Edge-Ring", "Edge-Loc", "Loc", "Scratch")
+CONTINUOUS_PATTERNS = ("Radial", "Tilt", "Saddle", "Ring", "Spot", "Stripe")
 
 
 def synthetic_wafers(
@@ -268,7 +269,8 @@ def synthetic_wafers(
     *,
     seed: int = 0,
     grid: int = 40,
-    patterns: Sequence[str] = SYNTHETIC_PATTERNS,
+    patterns: Sequence[str] | None = None,
+    target: str = "binary",
 ) -> list[WaferRecord]:
     """Generate wafer maps with WM-811K-like failure patterns.
 
@@ -277,22 +279,86 @@ def synthetic_wafers(
     records produced here carry ``source="synthetic"`` and every artifact derived
     from them says so, because a number measured on a stand-in must never be
     presented as a number measured on the dataset.
+
+    ``target="continuous"`` generates smooth, noisy fields in place of pass/fail
+    maps — the shape real metrology produces (CD, thickness, overlay) rather than
+    a binary label. WM-811K cannot answer whether the same selection rule ranks
+    locations well on continuous data; this is the only source here that can even
+    ask the question.
     """
+    if target not in ("binary", "continuous"):
+        raise ValueError(f"unknown target {target!r}; expected 'binary' or 'continuous'")
+    patterns = patterns or (SYNTHETIC_PATTERNS if target == "binary" else CONTINUOUS_PATTERNS)
+
     rng = np.random.default_rng(seed)
     records: list[WaferRecord] = []
     for i in range(n_wafers):
         pattern = patterns[i % len(patterns)]
         size = int(grid + rng.integers(-4, 5))
-        wafer_map = _synthetic_map(size, pattern, rng)
-        records.append(
-            record_from_map(
-                wafer_map,
-                wafer_id=f"synthetic-{i:03d}",
-                pattern=pattern,
-                source="synthetic",
+        if target == "binary":
+            records.append(
+                record_from_map(
+                    _synthetic_map(size, pattern, rng),
+                    wafer_id=f"synthetic-{i:03d}",
+                    pattern=pattern,
+                    source="synthetic",
+                )
             )
-        )
+        else:
+            records.append(
+                _continuous_record(size, pattern, rng, wafer_id=f"synthetic-cont-{i:03d}")
+            )
     return records
+
+
+def _continuous_record(
+    size: int, pattern: str, rng: np.random.Generator, *, wafer_id: str
+) -> WaferRecord:
+    """A smooth, noisy metrology-like field on the same circular die grid.
+
+    Values are scaled into ``[0, 1]`` so the prior generator, the estimator and
+    the metrics need no special case — what changes is that the truth is now a
+    continuous surface plus measurement noise rather than a label.
+    """
+    yy, xx = np.mgrid[0:size, 0:size]
+    centre = (size - 1) / 2.0
+    ry = (yy - centre) / centre
+    rx = (xx - centre) / centre
+    radius = np.sqrt(ry**2 + rx**2)
+    inside = radius <= 1.0
+
+    if pattern == "Radial":
+        field = 1.0 - 0.8 * radius**2
+    elif pattern == "Tilt":
+        angle = rng.uniform(-np.pi, np.pi)
+        field = 0.5 + 0.45 * (rx * np.cos(angle) + ry * np.sin(angle))
+    elif pattern == "Saddle":
+        field = 0.5 + 0.4 * (rx**2 - ry**2)
+    elif pattern == "Ring":
+        field = 0.3 + 0.6 * np.exp(-((radius - 0.6) ** 2) / (2 * 0.15**2))
+    elif pattern == "Spot":
+        cy, cx = rng.uniform(-0.5, 0.5, size=2)
+        field = 0.3 + 0.6 * np.exp(-((ry - cy) ** 2 + (rx - cx) ** 2) / (2 * 0.2**2))
+    else:  # Stripe
+        angle = rng.uniform(0, np.pi)
+        field = 0.5 + 0.35 * np.sin(4.0 * (rx * np.cos(angle) + ry * np.sin(angle)))
+
+    # Tool noise: real readings are not smooth, and an estimator that assumes
+    # they are would look better here than it deserves.
+    field = field + rng.normal(0.0, 0.04, field.shape)
+    field = np.clip(field, 0.0, 1.0)
+
+    coords = np.argwhere(inside)
+    return WaferRecord(
+        wafer_id=wafer_id,
+        pattern=pattern,
+        grid_shape=(size, size),
+        die_mask=inside,
+        reality=field[inside],
+        coords=coords.astype(int),
+        source="synthetic",
+        target_kind="continuous",
+    )
 
 
 def _synthetic_map(size: int, pattern: str, rng: np.random.Generator) -> np.ndarray:
@@ -340,24 +406,37 @@ def load_wafers(
     seed: int,
     subset_path: os.PathLike[str] | str = DEFAULT_SUBSET_PATH,
     raw_path: os.PathLike[str] | str = DEFAULT_RAW_PATH,
+    target: str = "binary",
 ) -> tuple[list[WaferRecord], dict]:
     """Resolve the evaluation wafers and the dataset block for the results file."""
     if synthetic:
-        records = synthetic_wafers(n_wafers, seed=seed)
+        records = synthetic_wafers(n_wafers, seed=seed, target=target)
+        continuous = target == "continuous"
         return records, {
-            "name": "synthetic-wafers",
+            "name": "synthetic-wafers-continuous" if continuous else "synthetic-wafers",
             "subset_file": None,
             "n_wafers": len(records),
+            "target": target,
             "note": (
-                "Stand-in wafer maps generated by nano.data.synthetic_wafers. "
-                "Not WM-811K. Numbers from this source describe the stand-in only."
+                "Stand-in wafer maps generated by nano.data.synthetic_wafers"
+                + (
+                    " with a continuous, noisy metrology-like target. "
+                    if continuous
+                    else ". "
+                )
+                + "Not WM-811K. Numbers from this source describe the stand-in only."
             ),
         }
+    if target != "binary":
+        raise ValueError(
+            "WM-811K labels are binary pass/fail; a continuous target needs --synthetic."
+        )
     records = load_subset(subset_path, raw_path)[:n_wafers]
     return records, {
         "name": "WM-811K",
         "subset_file": str(subset_path),
         "n_wafers": len(records),
+        "target": "binary",
     }
 
 

@@ -21,9 +21,21 @@ argument about the *method*, not as a prediction of accuracy on real simulation 
 ### WM-811K labels are not metrology values
 
 Wafer maps are binary pass/fail per die. Real metrology produces continuous, noisy readings — CD,
-thickness, overlay — with tool-dependent measurement error. A continuous target changes the
-estimator's job and would change the uncertainty model with it. Nothing here shows that the same
-selection rule ranks locations well on continuous data.
+thickness, overlay — with tool-dependent measurement error.
+
+`--target continuous` runs the whole pipeline against a smooth, noisy stand-in field instead, and it
+changes two conclusions rather than confirming them:
+
+- **The selection rule does better, not worse.** NANO separates from Random by 16.9% [12.1, 21.5] and
+  from Grid by 10.0% [6.2, 13.5], where on the binary target it does not separate from Random at all.
+- **The ablation reverses.** The full three-term rule beats every reduced one, including the
+  `uncertainty × disagreement` rule that beats it on the binary target. Whether the novelty term
+  earns its place depends on which target it is asked about — so neither answer transfers, and the
+  one measured on binary labels is the weaker of the two proxies for metrology.
+
+Both runs are on stand-in wafers. What they establish together is narrower than either alone: the
+selection rule's advantage is target-dependent, and this project has not measured it on real
+metrology values.
 
 ### Uncertainty is used, not claimed to be calibrated
 
@@ -33,9 +45,21 @@ calibrated — that a stated interval covers the truth at the stated rate.
 The weaker property, that uncertainty *orders* the unmeasured dies by how wrong the estimate is
 there, **is** now measured: every run reports a Spearman rank correlation and a binned reliability
 curve over the dies the agent never looked at, and the
-[benchmark page](./benchmark) publishes both. That is the property the acquisition rule depends on,
-and it is the only one being asserted. Coverage is still not evaluated, no interval is stated, and
-any use of these uncertainty values as probabilities would be unsupported.
+[benchmark page](./benchmark) publishes both.
+
+On the binary stand-in that property holds — pooled ρ ≈ 0.40, and the reliability curve rises
+monotonically. **On the continuous stand-in it does not**: pooled ρ ≈ 0.00, and it stays slightly
+*negative* even with the measurement noise turned off entirely. The uncertainty map is a model of
+measurement *coverage*, and coverage predicts error only when the thing being reconstructed has
+structure that measurements resolve. On a smooth field, the estimate's error concentrates where the
+surface curves rather than where measurements are sparse, and a distance-based uncertainty map has
+nothing to say about it.
+
+That matters more than it might read, because the continuous target is the one closer to real
+metrology. NANO still wins the continuous benchmark comfortably — but not for the reason the design
+claims, which is that its uncertainty map knows where it is wrong. Coverage is still not evaluated,
+no interval is stated, and any use of these uncertainty values as probabilities would be
+unsupported.
 
 ### The stand-in wafer source is not the dataset
 

@@ -42,6 +42,15 @@ def add_source_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     )
     group.add_argument("--wafers", type=int, default=12, help="number of evaluation wafers")
     group.add_argument(
+        "--target",
+        choices=["binary", "continuous"],
+        default="binary",
+        help=(
+            "what the hidden reality holds: binary pass/fail (WM-811K's labels), or a "
+            "continuous, noisy metrology-like field (stand-in source only)"
+        ),
+    )
+    group.add_argument(
         "--subset-seed", type=int, default=0, help="seed for the wafer source, not for an episode"
     )
     return parser
@@ -93,6 +102,7 @@ def resolve_wafers(args: argparse.Namespace) -> tuple[list[WaferRecord], dict]:
         seed=args.subset_seed,
         subset_path=args.subset,
         raw_path=args.raw,
+        target=getattr(args, "target", "binary"),
     )
 
 

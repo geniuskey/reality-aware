@@ -107,3 +107,52 @@ def test_subset_rejects_small_grids(tmp_path):
 def test_missing_dataset_says_what_to_do(tmp_path):
     with pytest.raises(FileNotFoundError, match="--synthetic"):
         list(load_subset(tmp_path / "nope.json", tmp_path / "missing.pkl"))
+
+
+def test_a_continuous_target_is_a_smooth_noisy_field():
+    wafers = synthetic_wafers(3, seed=0, target="continuous")
+    for wafer in wafers:
+        assert wafer.target_kind == "continuous"
+        assert wafer.source == "synthetic"
+        assert 0.0 <= wafer.reality.min() and wafer.reality.max() <= 1.0
+        # Not a label: the values must actually take intermediate levels.
+        interior = (wafer.reality > 0.05) & (wafer.reality < 0.95)
+        assert interior.mean() > 0.5
+        assert len(np.unique(wafer.reality)) > 100
+
+
+def test_binary_and_continuous_sources_are_told_apart():
+    binary = synthetic_wafers(2, seed=0)[0]
+    continuous = synthetic_wafers(2, seed=0, target="continuous")[0]
+
+    assert set(np.unique(binary.reality)) <= {0.0, 1.0}
+    assert binary.target_kind == "binary"
+    assert continuous.wafer_id != binary.wafer_id  # ids say which source they came from
+
+
+def test_a_continuous_target_is_deterministic():
+    left = synthetic_wafers(2, seed=5, target="continuous")
+    right = synthetic_wafers(2, seed=5, target="continuous")
+    for a, b in zip(left, right):
+        np.testing.assert_array_equal(a.reality, b.reality)
+
+
+def test_an_unknown_target_is_refused():
+    with pytest.raises(ValueError, match="unknown target"):
+        synthetic_wafers(1, target="ternary")
+
+
+def test_wm811k_cannot_serve_a_continuous_target(tmp_path):
+    """Its labels are pass/fail; pretending otherwise would be the lie the
+    limitations page warns about."""
+    from nano.data import load_wafers
+
+    with pytest.raises(ValueError, match="binary pass/fail"):
+        load_wafers(
+            synthetic=False,
+            n_wafers=1,
+            seed=0,
+            subset_path=tmp_path / "subset.json",
+            raw_path=tmp_path / "raw.pkl",
+            target="continuous",
+        )

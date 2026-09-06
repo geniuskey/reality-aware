@@ -281,3 +281,33 @@ def test_the_bias_parameters_are_recorded_and_shared(summary):
 def test_an_empty_evaluation_set_is_refused():
     with pytest.raises(ValueError, match="no evaluation wafers"):
         run_benchmark([], seeds=[0], initial_measurements=1, budget=1)
+
+
+def test_a_continuous_run_scores_only_the_metrics_that_apply():
+    from nano.data import synthetic_wafers
+
+    summary = run_benchmark(
+        synthetic_wafers(2, seed=1, grid=20, target="continuous"),
+        seeds=[0, 1],
+        initial_measurements=10,
+        budget=12,
+    )
+    assert summary["experiment"]["target_kind"] == "continuous"
+    # MAE leads, because the class-balanced metrics have no classes to balance.
+    assert summary["metric"]["key"] == "mae"
+    for strategy in summary["strategies"].values():
+        assert set(strategy["metrics"]) == {"mae", "rmse"}
+
+    # The trivial reference adapts too: no "no die fails" answer exists here.
+    assert "prior" in summary["references"] and "constant" in summary["references"]
+    assert "mean level" in summary["references"]["constant"]["description"]
+
+
+def test_wafers_of_mixed_target_kinds_are_refused():
+    from nano.data import synthetic_wafers
+
+    mixed = synthetic_wafers(1, seed=0, grid=18) + synthetic_wafers(
+        1, seed=0, grid=18, target="continuous"
+    )
+    with pytest.raises(ValueError, match="same target kind"):
+        run_benchmark(mixed, seeds=[0], initial_measurements=4, budget=4)

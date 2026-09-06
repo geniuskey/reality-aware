@@ -30,9 +30,11 @@ python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
-pytest                                                    # 75 tests, no dataset needed
-python -m nano.demo --synthetic --wafer 0 --seed 0         # one narrated episode + figures
-python -m nano.benchmark --synthetic --seeds 0 1 2 3 4     # all three arms + results file
+pytest                                                     # 115 tests, no dataset needed
+python -m nano.demo --synthetic --wafer 0 --seed 0          # one narrated episode + figures
+python -m nano.benchmark --synthetic --seeds 0 1 2 3 4      # all three arms + results file
+python -m nano.benchmark --synthetic --ablation             # what each acquisition term is worth
+python -m nano.benchmark --synthetic --target continuous    # metrology-like values, not labels
 ```
 
 With a local copy of WM-811K at `data/raw/LSWMD.pkl`, build the versioned evaluation index once and
@@ -60,6 +62,20 @@ acquisition(i) = uncertainty(i) × simulation_disagreement(i) × spatial_novelty
 
 and it is recorded in every results file, so the documented rule and the executed rule cannot drift
 apart.
+
+### What a run reports
+
+Every arm is paired with NANO episode by episode and bootstrapped, so an improvement comes with a
+95% interval and prints **not separated** when that interval spans zero. Two measurement-free
+predictors — the uncorrected prior and a constant — are scored in the same table, because a rule that
+cannot beat a predictor which reads nothing has not earned the tool time it spent. The primary
+metric on a binary target is balanced MAE, since plain MAE over rare failures is won by answering
+"no die fails" everywhere; both are reported. `--ablation` re-runs the rule with terms dropped, and
+every run reports whether its uncertainty map actually ranks the dies by error.
+
+Findings from the stand-in source are on the
+[Honest Scope page](https://geniuskey.github.io/reality-aware/limitations), including the two that
+go against the design.
 
 ## Run the docs locally
 
@@ -119,7 +135,8 @@ figure cannot go stale in one place and be correct in another.
 | `nano/prior.py` | The deliberately biased simulation prior: smoothing, radial bias, offset and gain |
 | `nano/tools/observe.py` | The only channel to reality; holds and spends the measurement budget |
 | `nano/model.py` | Prediction, uncertainty, reality gap and expected disagreement from prior + observations |
-| `nano/policy.py` | The three-term acquisition rule, with the per-term breakdown for every decision |
+| `nano/policy.py` | The three-term acquisition rule, its ablations, and the per-term breakdown for every decision |
+| `nano/metrics.py` | Class-balanced metrics, paired bootstrap intervals, and the uncertainty-ranking check |
 | `nano/baselines.py` | Random and Grid, behind the same interface |
 | `nano/agent.py` | The loop, and the initial centre-biased observation mask |
 | `nano/evaluate.py` | Scoring against hidden ground truth; writes `results/benchmark_summary.json` |

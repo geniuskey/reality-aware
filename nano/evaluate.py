@@ -258,6 +258,7 @@ def run_benchmark(
             "measurement_budget": int(budget),
             "grid_shape": [int(modal_shape[0]), int(modal_shape[1])],
             "grid_shape_note": "modal die grid across the evaluation wafers; wafers are never resized",
+            "target_kind": target_kind,
             "mean_dies_per_wafer": round(float(np.mean([r.n_dies for r in records])), 1),
             "episodes": len(episodes),
             "acquisition_rule": " x ".join(terms),

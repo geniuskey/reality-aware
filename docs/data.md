@@ -115,6 +115,26 @@ The initial mask is drawn **centre-biased, not uniformly**, to reproduce the sam
 on the [problem page](./problem). All strategies — Random, Grid and NANO — start from the *same*
 initial mask for a given `(wafer, seed)` pair. Only the additional measurements differ.
 
+## The continuous target
+
+WM-811K labels are binary, and real metrology readings are not. So the stand-in source can also
+generate a **continuous** target — smooth surfaces (radial, tilt, saddle, ring, spot, stripe) plus
+per-die noise, the shape a CD, thickness or overlay map has:
+
+```bash
+python -m nano.benchmark --synthetic --target continuous --seeds 0 1 2 3 4
+```
+
+Nothing else in the pipeline changes: the same prior generator, the same estimator, the same
+selection rules, the same budget. What changes is what the metrics can say — the class-balanced
+metrics have no classes to balance, so a continuous run leads with plain MAE and reports RMSE beside
+it, and the constant reference predicts the prior's mean level instead of "no die fails".
+
+This is the only source here that can ask whether the same selection rule works on the kind of data
+metrology actually produces. It answers with a stand-in, not with a fab, and
+[Honest Scope](./limitations) records what that run found — including one result that contradicts the
+binary run.
+
 ## Evaluation protocol
 
 | Setting | Value |
