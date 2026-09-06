@@ -1,0 +1,1702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where to Measure Next</title>
+<meta name="description" content="Re-run the NANO active metrology loop in the browser on twelve real WM-811K wafers: sixty measurements, a biased simulation, and the rule that picks where to probe next.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #eceff0;
+    --panel: #fbfcfc;
+    --panel-2: #e2e8e9;
+    --line: #c6d1d3;
+    --line-soft: #dbe3e4;
+    --ink: #0f1719;
+    --dim: #5c6d70;
+    --faint: #87989b;
+    --accent: #0e7c86;
+    --accent-ink: #ffffff;
+    --accent-soft: #d7eef0;
+    --good: #3f7d20;
+    --warn: #a35a09;
+    --bad: #a02c2c;
+
+    --sans: 'IBM Plex Sans', 'IBM Plex Sans KR', system-ui, sans-serif;
+    --cond: 'IBM Plex Sans Condensed', 'IBM Plex Sans KR', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0b1113;
+      --panel: #121b1e;
+      --panel-2: #1a262a;
+      --line: #2a393e;
+      --line-soft: #202e32;
+      --ink: #e4eef0;
+      --dim: #93a7ab;
+      --faint: #6b7f83;
+      --accent: #41c9d6;
+      --accent-ink: #06181b;
+      --accent-soft: #123a40;
+      --good: #86c04e;
+      --warn: #dda15e;
+      --bad: #e0736c;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0b1113;
+    --panel: #121b1e;
+    --panel-2: #1a262a;
+    --line: #2a393e;
+    --line-soft: #202e32;
+    --ink: #e4eef0;
+    --dim: #93a7ab;
+    --faint: #6b7f83;
+    --accent: #41c9d6;
+    --accent-ink: #06181b;
+    --accent-soft: #123a40;
+    --good: #86c04e;
+    --warn: #dda15e;
+    --bad: #e0736c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1420px;
+    margin: 0 auto;
+    padding: 28px 24px 56px;
+  }
+
+  /* ---------- header ---------- */
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--cond);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .eyebrow a {
+    color: var(--faint);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+
+  .eyebrow a:hover { color: var(--accent); border-bottom-color: currentColor; }
+
+  h1 {
+    font-family: var(--cond);
+    font-weight: 700;
+    font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+    line-height: 1.05;
+    letter-spacing: -.01em;
+    margin: 4px 0 6px;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--dim);
+  }
+
+  .provenance {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--panel);
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--dim);
+    white-space: nowrap;
+  }
+
+  .chip b { color: var(--ink); font-weight: 500; }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--good);
+  }
+
+  /* ---------- layout ---------- */
+
+  main {
+    display: grid;
+    grid-template-columns: 296px minmax(0, 1fr);
+    gap: 22px;
+    margin-top: 22px;
+    align-items: start;
+  }
+
+  @media (max-width: 1000px) {
+    main { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: sticky;
+    top: 18px;
+  }
+
+  @media (max-width: 1000px) {
+    .rail { position: static; }
+  }
+
+  .stage {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    min-width: 0;
+  }
+
+  .block {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 16px;
+  }
+
+  .block--flat {
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  h2 {
+    font-family: var(--cond);
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 12px;
+  }
+
+  h2 .aside {
+    font-family: var(--mono);
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 400;
+    color: var(--faint);
+  }
+
+  /* ---------- controls ---------- */
+
+  .wafer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 320px;
+    overflow-y: auto;
+    margin: -4px -4px 0;
+    padding: 4px;
+  }
+
+  .wafer-option {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 4px 10px;
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .wafer-option:hover { background: var(--panel-2); }
+
+  .wafer-option[aria-pressed="true"] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  .wafer-option .pat {
+    font-weight: 600;
+    font-size: .84rem;
+  }
+
+  .wafer-option .meta {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--dim);
+  }
+
+  .wafer-option .id {
+    grid-column: 1 / -1;
+    font-family: var(--mono);
+    font-size: .67rem;
+    color: var(--faint);
+  }
+
+  .field { display: flex; flex-direction: column; gap: 8px; }
+
+  .field + .field { margin-top: 16px; }
+
+  .field > label {
+    font-family: var(--cond);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .seg {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .seg button {
+    flex: 1;
+    padding: 6px 4px;
+    border: 0;
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--dim);
+    font-family: var(--mono);
+    font-size: .78rem;
+    cursor: pointer;
+  }
+
+  .seg button:last-child { border-right: 0; }
+  .seg button:hover { background: var(--panel-2); color: var(--ink); }
+
+  .seg button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .seg.lang { align-self: flex-end; }
+
+  .seg.lang button {
+    flex: 0 0 auto;
+    padding: 4px 12px;
+    font-size: .72rem;
+    white-space: nowrap;
+  }
+
+  .terms { display: flex; flex-direction: column; gap: 7px; }
+
+  .term-toggle {
+    display: grid;
+    grid-template-columns: 15px 1fr;
+    gap: 3px 10px;
+    align-items: center;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--panel);
+    cursor: pointer;
+  }
+
+  .term-toggle:hover { border-color: var(--accent); }
+
+  .term-toggle input {
+    grid-row: 1 / 3;
+    accent-color: var(--accent);
+    width: 15px;
+    height: 15px;
+    margin: 0;
+  }
+
+  .term-toggle .name {
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 500;
+  }
+
+  .term-toggle .what {
+    font-size: .74rem;
+    color: var(--dim);
+    line-height: 1.4;
+  }
+
+  .term-toggle:has(input:not(:checked)) { opacity: .55; }
+
+  .transport { display: flex; gap: 8px; }
+
+  button.action {
+    flex: 1;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--panel);
+    color: var(--ink);
+    font-family: var(--cond);
+    font-size: .84rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    cursor: pointer;
+  }
+
+  button.action:hover { background: var(--panel-2); }
+
+  button.action.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  button.action.primary:hover { filter: brightness(1.08); }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    margin: 0;
+  }
+
+  .scrub-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: .74rem;
+    color: var(--dim);
+  }
+
+  .scrub-row b { color: var(--ink); font-weight: 500; }
+
+  :where(button, input, a):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- wafer maps ---------- */
+
+  .maps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .rulerow {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 760px) {
+    .maps, .rulerow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  figcaption {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .cap-name {
+    font-family: var(--cond);
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+
+  .cap-note {
+    font-family: var(--mono);
+    font-size: .68rem;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+
+  .canvas-shell {
+    position: relative;
+    background: var(--panel-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 3px;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+
+  .canvas-shell canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  figure.off { opacity: .34; }
+
+  figure.off .cap-name { text-decoration: line-through; }
+
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: .66rem;
+    color: var(--faint);
+  }
+
+  .ramp {
+    flex: 1;
+    height: 6px;
+    border-radius: 2px;
+  }
+
+  /* ---------- readout ---------- */
+
+  .readout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  @media (max-width: 900px) {
+    .readout { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .score-table th, .score-table td {
+    padding: 7px 8px;
+    text-align: right;
+    border-bottom: 1px solid var(--line-soft);
+    font-family: var(--mono);
+    font-size: .78rem;
+  }
+
+  .score-table th {
+    font-family: var(--cond);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--faint);
+    border-bottom-color: var(--line);
+  }
+
+  .score-table th:first-child,
+  .score-table td:first-child { text-align: left; }
+
+  .score-table tr.is-nano td {
+    background: var(--accent-soft);
+    font-weight: 500;
+  }
+
+  .trace {
+    font-family: var(--mono);
+    font-size: .72rem;
+    line-height: 1.75;
+    color: var(--dim);
+    overflow-x: auto;
+    white-space: pre;
+    min-height: 176px;
+  }
+
+  .trace b { color: var(--ink); font-weight: 500; }
+  .trace .fail { color: var(--bad); }
+
+  svg.curve { display: block; width: 100%; height: auto; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--dim);
+  }
+
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+  .key {
+    width: 16px;
+    height: 0;
+    border-top-width: 2px;
+    border-top-style: solid;
+  }
+
+  /* ---------- notes ---------- */
+
+  footer {
+    margin-top: 34px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  .notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px 30px;
+  }
+
+  .notes h3 {
+    font-family: var(--cond);
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 0 0 6px;
+  }
+
+  .notes p {
+    margin: 0;
+    font-size: .8rem;
+    line-height: 1.6;
+    color: var(--dim);
+    max-width: 46ch;
+  }
+
+  .notes code {
+    font-family: var(--mono);
+    font-size: .92em;
+    color: var(--ink);
+  }
+
+  .notes a { color: var(--accent); }
+
+  img { max-width: 100%; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">
+        <span data-i18n="eyebrow">WM-811K · active metrology loop</span>
+        <a href="./" id="home-link">reality-aware</a>
+      </div>
+      <h1 data-i18n="h1">Where to Measure Next</h1>
+      <p class="lede" data-i18n="lede">
+        The simulation is biased and the budget is sixty dies. The agent picks where to probe next,
+        one die at a time. Switch the terms of its rule on and off and watch the choices change.
+      </p>
+    </div>
+    <div class="provenance">
+      <div class="seg lang" id="lang-seg" role="group" aria-label="Language">
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="ko">한국어</button>
+      </div>
+      <span class="chip" id="chip-parity"></span>
+      <span class="chip" id="chip-data"></span>
+    </div>
+  </header>
+
+  <main>
+    <aside class="rail">
+      <section class="block">
+        <h2 data-i18n="hWafers">Wafers</h2>
+        <div class="wafer-list" id="wafer-list" role="group" aria-label="Wafer"></div>
+      </section>
+
+      <section class="block">
+        <h2 data-i18n="hConditions">Run conditions</h2>
+        <div class="field">
+          <label id="seed-label" data-i18n="lSeed">Seed for the initial 20</label>
+          <div class="seg" id="seed-seg" role="group" aria-labelledby="seed-label"></div>
+        </div>
+        <div class="field">
+          <label data-i18n="lRule">Acquisition rule</label>
+          <div class="terms" id="terms"></div>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2><span data-i18n="hBudget">Budget</span> <span class="aside" id="budget-aside"></span></h2>
+        <div class="field">
+          <input type="range" id="scrub" min="0" max="60" step="1" value="60">
+          <div class="scrub-row">
+            <span id="scrub-a"></span>
+            <span id="scrub-b"></span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="transport">
+            <button class="action primary" id="play"></button>
+            <button class="action" id="step" data-i18n="bStep">One step</button>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <div class="stage">
+      <section class="block block--flat">
+        <h2><span data-i18n="hWafer">Wafer</span> <span class="aside" id="stage-note"></span></h2>
+        <div class="maps">
+          <figure>
+            <figcaption>
+              <span class="cap-name" data-i18n="capPrior">Biased prior</span>
+              <span class="cap-note" data-i18n="capPriorNote">simulation</span>
+            </figcaption>
+            <div class="canvas-shell"><canvas id="c-prior"></canvas></div>
+          </figure>
+          <figure>
+            <figcaption>
+              <span class="cap-name" data-i18n="capRecon">NANO reconstruction</span>
+              <span class="cap-note" id="cap-recon"></span>
+            </figcaption>
+            <div class="canvas-shell"><canvas id="c-pred"></canvas></div>
+          </figure>
+          <figure>
+            <figcaption>
+              <span class="cap-name" data-i18n="capTruth">Ground truth</span>
+              <span class="cap-note" data-i18n="capTruthNote">hidden from the agent</span>
+            </figcaption>
+            <div class="canvas-shell"><canvas id="c-truth"></canvas></div>
+          </figure>
+        </div>
+        <div class="swatch" style="margin-top:10px">
+          <span data-i18n="rampLow">failure probability 0</span>
+          <span class="ramp" id="ramp-magma"></span>
+          <span>1</span>
+        </div>
+      </section>
+
+      <section class="block block--flat">
+        <h2><span data-i18n="hRule">Why this die, next</span> <span class="aside" id="rule-note"></span></h2>
+        <div class="rulerow" id="rulerow">
+          <figure data-term="uncertainty">
+            <figcaption>
+              <span class="cap-name">uncertainty</span>
+              <span class="cap-note">×</span>
+            </figcaption>
+            <div class="canvas-shell"><canvas id="c-unc"></canvas></div>
+          </figure>
+          <figure data-term="disagreement">
+            <figcaption>
+              <span class="cap-name">disagreement</span>
+              <span class="cap-note">×</span>
+            </figcaption>
+            <div class="canvas-shell"><canvas id="c-dis"></canvas></div>
+          </figure>
+          <figure data-term="novelty">
+            <figcaption>
+              <span class="cap-name">novelty</span>
+              <span class="cap-note">=</span>
+            </figcaption>
+            <div class="canvas-shell"><canvas id="c-nov"></canvas></div>
+          </figure>
+          <figure data-term="acquisition">
+            <figcaption>
+              <span class="cap-name">acquisition</span>
+              <span class="cap-note" id="cap-acq"></span>
+            </figcaption>
+            <div class="canvas-shell"><canvas id="c-acq"></canvas></div>
+          </figure>
+        </div>
+      </section>
+
+      <div class="readout">
+        <section class="block">
+          <h2><span data-i18n="hCurve">Measurements vs error</span> <span class="aside" id="curve-aside"></span></h2>
+          <svg class="curve" id="curve" viewBox="0 0 520 250" role="img" aria-label="Error against number of measurements"></svg>
+          <div class="legend">
+            <span><i class="key" style="border-color:var(--accent)"></i>NANO</span>
+            <span><i class="key" style="border-color:var(--warn)"></i>Random</span>
+            <span><i class="key" style="border-color:var(--dim)"></i>Grid</span>
+            <span><i class="key" style="border-color:var(--faint);border-top-style:dashed"></i><span data-i18n="legPrior">uncorrected prior</span></span>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2><span data-i18n="hNow">At this step</span> <span class="aside" id="score-note"></span></h2>
+          <table class="score-table">
+            <thead>
+              <tr>
+                <th data-i18n="thStrategy">Strategy</th>
+                <th>Balanced MAE</th>
+                <th>MAE</th>
+              </tr>
+            </thead>
+            <tbody id="score-body"></tbody>
+          </table>
+          <h2 style="margin-top:18px" data-i18n="hTrace">Decision trace</h2>
+          <div class="trace" id="trace"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="notes">
+      <div>
+        <h3 data-i18n="n1h">What this page actually does</h3>
+        <p id="note-parity"></p>
+      </div>
+      <div id="note-diverge-block">
+        <h3 id="note-diverge-head"></h3>
+        <p id="note-diverge"></p>
+      </div>
+      <div>
+        <h3 data-i18n="n3h">Random and Grid are replayed, not reproduced</h3>
+        <p data-i18n-html="n3p"></p>
+      </div>
+      <div>
+        <h3 data-i18n="n4h">One wafer is not a result</h3>
+        <p id="note-headline"></p>
+      </div>
+      <div>
+        <h3 data-i18n="n5h">Where the wafers come from</h3>
+        <p data-i18n-html="n5p"></p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script type="application/json" id="wafer-data">__WAFER_DATA__</script>
+<script>
+(function () {
+  'use strict';
+
+  // ------------------------------------------------------------------ engine
+  // A port of nano/model.py, nano/policy.py and nano/agent.py. Constants match
+  // the published run; the notes at the foot of the page state the one
+  // documented difference (argmax tie-breaking).
+
+  var PRIOR_WEIGHT = 0.5;
+  var SPREAD_WEIGHT = 0.5;
+  var EPS = 1e-3;
+  var TERM_NAMES = ['uncertainty', 'disagreement', 'novelty'];
+
+  function prepareWafer(raw) {
+    var n = raw.rows.length;
+    var reality = new Float64Array(n);
+    for (var i = 0; i < n; i++) reality[i] = raw.reality.charCodeAt(i) === 49 ? 1 : 0;
+    return {
+      id: raw.id, pattern: raw.pattern, shape: raw.shape, n: n,
+      rows: Int32Array.from(raw.rows), cols: Int32Array.from(raw.cols),
+      prior: Float64Array.from(raw.prior), lengthScale: raw.lengthScale,
+      reality: reality, seeds: raw.seeds
+    };
+  }
+
+  function estimate(wafer, observed, values) {
+    var n = wafer.n, rows = wafer.rows, cols = wafer.cols, prior = wafer.prior;
+    var m = observed.length;
+    var prediction = new Float64Array(n);
+    var uncertainty = new Float64Array(n);
+    var disagreement = new Float64Array(n);
+
+    if (m === 0) {
+      prediction.set(prior);
+      uncertainty.fill(1);
+      return { prediction: prediction, uncertainty: uncertainty, disagreement: disagreement };
+    }
+
+    var residuals = new Float64Array(m), absSum = 0, j, k;
+    for (j = 0; j < m; j++) {
+      residuals[j] = values[j] - prior[observed[j]];
+      absSum += Math.abs(residuals[j]);
+    }
+    var globalMagnitude = absSum / m;
+    var twoLs2 = 2 * wafer.lengthScale * wafer.lengthScale;
+
+    for (var i = 0; i < n; i++) {
+      var ri = rows[i], ci = cols[i];
+      var reach = 0, sumRes = 0, sumSq = 0, sumAbs = 0;
+      for (j = 0; j < m; j++) {
+        k = observed[j];
+        var dr = ri - rows[k], dc = ci - cols[k];
+        var weight = Math.exp(-(dr * dr + dc * dc) / twoLs2);
+        var res = residuals[j];
+        reach += weight;
+        sumRes += weight * res;
+        sumSq += weight * res * res;
+        sumAbs += weight * (res < 0 ? -res : res);
+      }
+      var denom = reach + PRIOR_WEIGHT;
+      var meanResidual = sumRes / denom;
+      var variance = Math.max(sumSq / denom - meanResidual * meanResidual, 0);
+      prediction[i] = Math.min(Math.max(prior[i] + meanResidual, 0), 1);
+      var base = 1 / (1 + reach);
+      var spread = Math.min(Math.max(Math.sqrt(variance) / 0.5, 0), 1);
+      uncertainty[i] = base + (1 - base) * SPREAD_WEIGHT * spread;
+      var shrink = reach / (reach + PRIOR_WEIGHT);
+      disagreement[i] = shrink * (sumAbs / denom) + (1 - shrink) * globalMagnitude;
+    }
+
+    for (j = 0; j < m; j++) {
+      prediction[observed[j]] = Math.min(Math.max(values[j], 0), 1);
+      uncertainty[observed[j]] = 0;
+    }
+    return { prediction: prediction, uncertainty: uncertainty, disagreement: disagreement };
+  }
+
+  function distanceToNearest(wafer, observed) {
+    var out = new Float64Array(wafer.n);
+    if (observed.length === 0) { out.fill(1); return out; }
+    for (var i = 0; i < wafer.n; i++) {
+      var ri = wafer.rows[i], ci = wafer.cols[i], best = Infinity;
+      for (var j = 0; j < observed.length; j++) {
+        var k = observed[j];
+        var dr = ri - wafer.rows[k], dc = ci - wafer.cols[k];
+        var d2 = dr * dr + dc * dc;
+        if (d2 < best) best = d2;
+      }
+      out[i] = Math.sqrt(best);
+    }
+    return out;
+  }
+
+  function unitScaleFloored(values) {
+    var low = Infinity, high = -Infinity, i;
+    for (i = 0; i < values.length; i++) {
+      if (values[i] < low) low = values[i];
+      if (values[i] > high) high = values[i];
+    }
+    var out = new Float64Array(values.length);
+    if (high - low <= 1e-12) { out.fill(EPS); return out; }
+    var span = high - low;
+    for (i = 0; i < values.length; i++) out[i] = EPS + (1 - EPS) * ((values[i] - low) / span);
+    return out;
+  }
+
+  function scoreTerms(wafer, est, observed, flag, terms) {
+    var maps = {
+      uncertainty: unitScaleFloored(est.uncertainty),
+      disagreement: unitScaleFloored(est.disagreement),
+      novelty: unitScaleFloored(distanceToNearest(wafer, observed))
+    };
+    var acquisition = new Float64Array(wafer.n);
+    for (var i = 0; i < wafer.n; i++) {
+      if (flag[i]) { acquisition[i] = -Infinity; continue; }
+      var value = 1;
+      for (var t = 0; t < terms.length; t++) value *= maps[terms[t]][i];
+      acquisition[i] = value;
+    }
+    maps.acquisition = acquisition;
+    return maps;
+  }
+
+  function argmax(scores) {
+    var best = -Infinity, i;
+    for (i = 0; i < scores.length; i++) if (scores[i] > best) best = scores[i];
+    if (!isFinite(best)) return null;
+    for (i = 0; i < scores.length; i++) if (scores[i] >= best - 1e-12) return i;
+    return null;
+  }
+
+  function metrics(prediction, reality) {
+    var sum = 0, failSum = 0, failN = 0, passSum = 0, passN = 0;
+    for (var i = 0; i < reality.length; i++) {
+      var err = Math.abs(prediction[i] - reality[i]);
+      sum += err;
+      if (reality[i] > 0.5) { failSum += err; failN++; } else { passSum += err; passN++; }
+    }
+    var failing = failN ? failSum / failN : NaN;
+    var passing = passN ? passSum / passN : NaN;
+    var pair = [failing, passing].filter(function (v) { return !isNaN(v); });
+    var balanced = pair.length ? pair.reduce(function (a, b) { return a + b; }, 0) / pair.length : NaN;
+    return { mae: sum / reality.length, balanced: balanced };
+  }
+
+  function runEpisode(wafer, opts) {
+    var observed = opts.initial.slice();
+    var values = observed.map(function (i) { return wafer.reality[i]; });
+    var flag = new Uint8Array(wafer.n);
+    observed.forEach(function (i) { flag[i] = 1; });
+
+    var frames = [], step;
+    for (step = 0; step <= opts.budget; step++) {
+      var est = estimate(wafer, observed, values);
+      var maps = opts.selections ? null : scoreTerms(wafer, est, observed, flag, opts.terms);
+      var chosen = opts.selections
+        ? (step < opts.budget ? opts.selections[step] : null)
+        : argmax(maps.acquisition);
+      var score = metrics(est.prediction, wafer.reality);
+
+      frames.push({
+        measurements: observed.length,
+        prediction: est.prediction,
+        maps: maps,
+        selected: chosen,
+        spent: step === opts.budget,
+        termValues: maps && chosen !== null ? {
+          uncertainty: maps.uncertainty[chosen],
+          disagreement: maps.disagreement[chosen],
+          novelty: maps.novelty[chosen],
+          acquisition: maps.acquisition[chosen]
+        } : null,
+        measured: chosen === null ? null : wafer.reality[chosen],
+        mae: score.mae,
+        balanced: score.balanced
+      });
+
+      if (step === opts.budget || chosen === null) break;
+      observed.push(chosen);
+      values.push(wafer.reality[chosen]);
+      flag[chosen] = 1;
+    }
+    return { frames: frames, observed: observed };
+  }
+
+  // ------------------------------------------------------------- colour maps
+
+  function ramp(stops) {
+    var parsed = stops.map(function (hex) {
+      return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+    });
+    return function (t) {
+      if (!(t >= 0)) t = 0;
+      if (t > 1) t = 1;
+      var pos = t * (parsed.length - 1);
+      var i = Math.min(Math.floor(pos), parsed.length - 2);
+      var f = pos - i;
+      var a = parsed[i], b = parsed[i + 1];
+      return [
+        Math.round(a[0] + (b[0] - a[0]) * f),
+        Math.round(a[1] + (b[1] - a[1]) * f),
+        Math.round(a[2] + (b[2] - a[2]) * f)
+      ];
+    };
+  }
+
+  var MAGMA = ramp(['#000004', '#1c1044', '#4f127b', '#812581', '#b5367a', '#e55964', '#fb8761', '#fec287', '#fcfdbf']);
+  var VIRIDIS = ramp(['#440154', '#414487', '#2a788e', '#22a884', '#7ad151', '#fde725']);
+  var CIVIDIS = ramp(['#00224e', '#35456c', '#666970', '#948e6e', '#c3ac54', '#fee838']);
+  var BONE = ramp(['#0b0d10', '#3a4048', '#767e88', '#b3bac2', '#eef1f4']);
+
+  function rampCss(fn) {
+    var stops = [];
+    for (var i = 0; i <= 10; i++) {
+      var c = fn(i / 10);
+      stops.push('rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ') ' + (i * 10) + '%');
+    }
+    return 'linear-gradient(90deg,' + stops.join(',') + ')';
+  }
+
+  // ------------------------------------------------------------------ canvas
+
+  function drawField(canvas, wafer, values, colour, opts) {
+    opts = opts || {};
+    var h = wafer.shape[0], w = wafer.shape[1];
+    var side = Math.max(h, w);
+    var cell = 12;
+    var px = side * cell;
+    if (canvas.width !== px) { canvas.width = px; canvas.height = px; }
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, px, px);
+
+    var offX = Math.round((side - w) / 2) * cell;
+    var offY = Math.round((side - h) / 2) * cell;
+
+    var lo = opts.lo, hi = opts.hi;
+    if (lo === undefined) {
+      lo = Infinity; hi = -Infinity;
+      for (var q = 0; q < values.length; q++) {
+        var v = values[q];
+        if (!isFinite(v)) continue;
+        if (v < lo) lo = v;
+        if (v > hi) hi = v;
+      }
+      if (!(hi > lo)) { lo = 0; hi = 1; }
+    }
+    var span = hi - lo || 1;
+
+    for (var i = 0; i < wafer.n; i++) {
+      var value = values[i];
+      var t = isFinite(value) ? (value - lo) / span : 0;
+      var c = colour(t);
+      ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+      ctx.fillRect(offX + wafer.cols[i] * cell, offY + wafer.rows[i] * cell, cell, cell);
+    }
+
+    if (opts.measured) {
+      ctx.fillStyle = 'rgba(255,255,255,.92)';
+      ctx.strokeStyle = 'rgba(0,0,0,.55)';
+      ctx.lineWidth = 1.5;
+      for (var j = 0; j < opts.measured.length; j++) {
+        var k = opts.measured[j];
+        var cx = offX + wafer.cols[k] * cell + cell / 2;
+        var cy = offY + wafer.rows[k] * cell + cell / 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, cell * 0.19, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    if (opts.highlight !== null && opts.highlight !== undefined && opts.highlight >= 0) {
+      var hx = offX + wafer.cols[opts.highlight] * cell + cell / 2;
+      var hy = offY + wafer.rows[opts.highlight] * cell + cell / 2;
+      ctx.strokeStyle = '#26f5c8';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(hx, hy, cell * 0.75, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // ------------------------------------------------------------------ strings
+
+  var T = {
+    en: {
+      eyebrow: 'WM-811K · active metrology loop',
+      h1: 'Where to Measure Next',
+      budgetAside: function (a, b) { return 'measurement ' + a + ' → ' + b; },
+      lede: 'The simulation is biased and the budget is sixty dies. The agent picks where to probe next, one die at a time. Switch the terms of its rule on and off and watch the choices change.',
+      chipParity: function (M) {
+        return M.parity
+          ? '<span class="dot"></span><b>' + M.parity.identical + '/' + M.parity.checked +
+            '</b> traces match Python'
+          : '<b>' + M.gitCommit + '</b> · parity unchecked';
+      },
+      chipData: function (M) {
+        return '<b>' + M.wafers + '</b> real ' + M.dataset + ' wafers · <b>' +
+          M.dies.toLocaleString('en-US') + '</b> dies';
+      },
+      hWafers: 'Wafers',
+      hConditions: 'Run conditions',
+      lSeed: 'Seed for the initial 20',
+      lRule: 'Acquisition rule',
+      hBudget: 'Budget',
+      bStep: 'One step',
+      bPlay: 'Replay from the start',
+      bPause: 'Pause',
+      hWafer: 'Wafer',
+      capPrior: 'Biased prior',
+      capPriorNote: 'simulation',
+      capRecon: 'NANO reconstruction',
+      capTruth: 'Ground truth',
+      capTruthNote: 'hidden from the agent',
+      rampLow: 'failure probability 0',
+      hRule: 'Why this die, next',
+      hCurve: 'Measurements vs error',
+      legPrior: 'uncorrected prior',
+      hNow: 'At this step',
+      thStrategy: 'Strategy',
+      hTrace: 'Decision trace',
+      rowPrior: 'uncorrected prior',
+      dropped: 'dropped',
+      selected: 'selected',
+      spentNext: 'budget spent · next candidate',
+      measuredOf: function (m) { return 'measured ' + m + ' / 80'; },
+      budgetUsed: function (s) { return 'budget used ' + s + ' / 60'; },
+      reconNote: function (m) { return m + ' measured'; },
+      vsBaseline: 'vs the better baseline',
+      traceEmpty: 'Budget spent. Scrub or replay to walk back through the decisions.',
+      dies: 'dies',
+      n1h: 'What this page actually does',
+      n1p: function (M) {
+        var base = 'It re-runs the loop in your browser. This is a port of <code>nano/model.py</code>, ' +
+          '<code>nano/policy.py</code> and <code>nano/agent.py</code> — the same kernel, the same prior ' +
+          'weight, the same normalisation, the same argmax. ';
+        return base + (M.parity
+          ? 'Checked against ' + M.parity.checked + ' traces exported from the Python implementation: ' +
+            M.parity.identical + ' were identical across all ' + M.budget + ' decisions.'
+          : 'The parity check has not been run against this build.');
+      },
+      n2h: function (M) {
+        return M.parity ? 'The ' + M.parity.divergent + ' that differ' : 'Where the two can differ';
+      },
+      n2p: function (M) {
+        return 'Every one is the <code>novelty</code>-only rule. Distance to the nearest measured die is ' +
+          'quantised on a die lattice, so the maximum ties dozens of ways. Python breaks that tie with the ' +
+          'episode’s seeded generator; this page breaks it by lowest index. No rule containing ' +
+          '<code>uncertainty</code> or <code>disagreement</code> produced a single tie.';
+      },
+      n3h: 'Random and Grid are replayed, not reproduced',
+      n3p: 'Their selection order was exported from Python’s numpy generator and is played back verbatim. Not imitating it is the honest option.',
+      n4h: 'One wafer is not a result',
+      n4p: function (M) {
+        var h = M.headline;
+        var mae = h.maeSeparated.length === 0
+          ? 'On plain MAE neither is separated.'
+          : 'On plain MAE only ' + h.maeSeparated.join(' and ') + ' is separated.';
+        return 'Whatever you see here is a single illustration. The published result covers ' +
+          M.wafers + ' wafers × ' + h.seeds + ' seeds — ' + h.episodes + ' episodes — where NANO leads ' +
+          'Random by ' + h.random.mean + '% [' + h.random.lo + ', ' + h.random.hi + '] and Grid by ' +
+          h.grid.mean + '% [' + h.grid.lo + ', ' + h.grid.hi + '] on ' + h.metric + '. ' + mae;
+      },
+      n5h: 'Where the wafers come from',
+      n5p: 'The twelve wafer maps embedded in this page are an excerpt of WM-811K, distributed by <a href="http://mirlab.org/dataSet/public/">MIR Lab</a>. Terms of use are set by the distributor, not by this project. Nothing else from the dataset ships with this site.'
+    },
+    ko: {
+      eyebrow: 'WM-811K · 능동 계측 루프',
+      h1: '다음은 어디를 잴 것인가',
+      budgetAside: function (a, b) { return '측정 ' + a + ' → ' + b; },
+      lede: '시뮬레이션은 편향되어 있고, 예산은 다이 60개뿐이다. 에이전트는 매 스텝 어디를 잴지 직접 고른다. 규칙의 항을 켜고 끄면서 그 선택이 어떻게 달라지는지 보라.',
+      chipParity: function (M) {
+        return M.parity
+          ? '<span class="dot"></span>Python 트레이스 <b>' + M.parity.identical + '/' +
+            M.parity.checked + '</b> 일치'
+          : '<b>' + M.gitCommit + '</b> · 대조 미실행';
+      },
+      chipData: function (M) {
+        return '실제 ' + M.dataset + ' 웨이퍼 <b>' + M.wafers + '</b>장 · 다이 <b>' +
+          M.dies.toLocaleString('en-US') + '</b>개';
+      },
+      hWafers: '웨이퍼',
+      hConditions: '실행 조건',
+      lSeed: '초기 20점 시드',
+      lRule: '획득 규칙',
+      hBudget: '예산',
+      bStep: '한 스텝',
+      bPlay: '처음부터 재생',
+      bPause: '일시정지',
+      hWafer: '웨이퍼',
+      capPrior: '편향된 prior',
+      capPriorNote: '시뮬레이션',
+      capRecon: 'NANO 재구성',
+      capTruth: '실제',
+      capTruthNote: '에이전트는 못 봄',
+      rampLow: '불량 확률 0',
+      hRule: '다음 한 점을 고르는 근거',
+      hCurve: '측정 수 대 오차',
+      legPrior: '보정 없는 prior',
+      hNow: '지금 이 순간',
+      thStrategy: '전략',
+      hTrace: '결정 추적',
+      rowPrior: '보정 없는 prior',
+      dropped: '빠짐',
+      selected: '선택',
+      spentNext: '예산 소진 · 다음 후보',
+      measuredOf: function (m) { return '측정 ' + m + ' / 80'; },
+      budgetUsed: function (s) { return '예산 사용 ' + s + ' / 60'; },
+      reconNote: function (m) { return m + '점 측정'; },
+      vsBaseline: 'vs 더 좋은 baseline',
+      traceEmpty: '예산을 모두 쓴 상태. 스크럽하거나 재생을 눌러 결정을 되짚어 보라.',
+      dies: 'dies',
+      n1h: '이 페이지가 실제로 하는 일',
+      n1p: function (M) {
+        var base = '루프를 브라우저에서 다시 돌린다. <code>nano/model.py</code>, <code>nano/policy.py</code>, ' +
+          '<code>nano/agent.py</code>를 옮긴 것이고, 같은 커널·같은 prior 가중치·같은 정규화·같은 argmax를 쓴다. ';
+        return base + (M.parity
+          ? 'Python 구현이 만든 트레이스 ' + M.parity.checked + '개와 대조해 ' + M.parity.identical +
+            '개가 결정 ' + M.budget + '번까지 완전히 동일했다.'
+          : '이 빌드에 대해서는 대조 검사를 아직 돌리지 않았다.');
+      },
+      n2h: function (M) {
+        return M.parity ? '일치하지 않는 ' + M.parity.divergent + '개' : '두 구현이 갈릴 수 있는 지점';
+      },
+      n2p: function () {
+        return '전부 <code>novelty</code> 단독 규칙이다. 가장 가까운 측정점까지의 거리는 다이 격자 위에서 ' +
+          '양자화되어 있어 최대값이 수십 개씩 동점이 된다. Python은 그 동점을 에피소드 시드로 깨고 여기서는 ' +
+          '가장 작은 인덱스로 깬다. <code>uncertainty</code>나 <code>disagreement</code>가 들어간 규칙에서는 ' +
+          '동점이 한 번도 발생하지 않는다.';
+      },
+      n3h: 'Random과 Grid는 재현이 아니라 재생',
+      n3p: '두 baseline의 선택 순서는 Python의 numpy 생성기에서 나온 것을 그대로 내려받아 재생한다. 흉내 내지 않는 편이 정직하다.',
+      n4h: '웨이퍼 한 장은 결과가 아니다',
+      n4p: function (M) {
+        var h = M.headline;
+        var mae = h.maeSeparated.length === 0
+          ? '단순 MAE에서는 둘 다 구분되지 않는다.'
+          : '단순 MAE에서는 ' + h.maeSeparated.join(', ') + '만 구분된다.';
+        return '여기서 무엇을 보든 그것은 예시 한 장이다. 게시된 결과는 웨이퍼 ' + M.wafers + '장 × 시드 ' +
+          h.seeds + '개, 총 ' + h.episodes + ' 에피소드에 대한 것이고, 거기서 NANO는 ' + h.metric +
+          ' 기준 Random 대비 ' + h.random.mean + '% [' + h.random.lo + ', ' + h.random.hi + '], Grid 대비 ' +
+          h.grid.mean + '% [' + h.grid.lo + ', ' + h.grid.hi + '] 앞선다. ' + mae;
+      },
+      n5h: '웨이퍼의 출처',
+      n5p: '이 페이지에 실린 웨이퍼 12장은 <a href="http://mirlab.org/dataSet/public/">MIR Lab</a>이 배포하는 WM-811K의 발췌다. 이용 약관은 이 프로젝트가 아니라 배포자가 정한다. 데이터셋에서 이 사이트에 함께 실리는 것은 이것뿐이다.'
+    }
+  };
+
+  var TERM_COPY = {
+    en: {
+      uncertainty: 'Where measurement has not reached',
+      disagreement: 'Where the prior looks wrong',
+      novelty: 'Far from what is already measured'
+    },
+    ko: {
+      uncertainty: '측정 영향이 닿지 않은 곳',
+      disagreement: 'prior가 틀렸을 것으로 보이는 곳',
+      novelty: '이미 잰 점에서 먼 곳'
+    }
+  };
+
+  function pickLanguage() {
+    var q = new URLSearchParams(location.search).get('lang');
+    if (q === 'ko' || q === 'en') return q;
+    try {
+      var saved = localStorage.getItem('playground-lang');
+      if (saved === 'ko' || saved === 'en') return saved;
+    } catch (e) { /* private mode, blocked storage */ }
+    return (navigator.language || 'en').toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en';
+  }
+
+  // --------------------------------------------------------------------- app
+
+  var DATA = JSON.parse(document.getElementById('wafer-data').textContent);
+  var BUDGET = DATA.loop.budget;
+  var INITIAL = DATA.loop.initial;
+  var META = DATA.meta;
+  META.budget = BUDGET;
+
+  var prepared = {};
+  DATA.wafers.forEach(function (raw) { prepared[raw.id] = prepareWafer(raw); });
+
+  var state = {
+    waferId: 'wm811k-645735',
+    seed: 0,
+    terms: TERM_NAMES.slice(),
+    frame: BUDGET,
+    playing: false,
+    lang: pickLanguage()
+  };
+  if (!prepared[state.waferId]) state.waferId = DATA.wafers[0].id;
+
+  function t(key) { return T[state.lang][key]; }
+
+  var episodes = { nano: null, random: null, grid: null, priorScore: null };
+  var baselineCache = {};
+
+  var el = {
+    waferList: document.getElementById('wafer-list'),
+    seedSeg: document.getElementById('seed-seg'),
+    langSeg: document.getElementById('lang-seg'),
+    terms: document.getElementById('terms'),
+    scrub: document.getElementById('scrub'),
+    scrubA: document.getElementById('scrub-a'),
+    scrubB: document.getElementById('scrub-b'),
+    play: document.getElementById('play'),
+    step: document.getElementById('step'),
+    stageNote: document.getElementById('stage-note'),
+    ruleNote: document.getElementById('rule-note'),
+    capRecon: document.getElementById('cap-recon'),
+    capAcq: document.getElementById('cap-acq'),
+    scoreBody: document.getElementById('score-body'),
+    scoreNote: document.getElementById('score-note'),
+    trace: document.getElementById('trace'),
+    curve: document.getElementById('curve'),
+    rulerow: document.getElementById('rulerow'),
+    chipParity: document.getElementById('chip-parity'),
+    chipData: document.getElementById('chip-data'),
+    noteParity: document.getElementById('note-parity'),
+    noteDivergeHead: document.getElementById('note-diverge-head'),
+    noteDiverge: document.getElementById('note-diverge'),
+    noteHeadline: document.getElementById('note-headline')
+  };
+
+  var canvases = {
+    prior: document.getElementById('c-prior'),
+    pred: document.getElementById('c-pred'),
+    truth: document.getElementById('c-truth'),
+    unc: document.getElementById('c-unc'),
+    dis: document.getElementById('c-dis'),
+    nov: document.getElementById('c-nov'),
+    acq: document.getElementById('c-acq')
+  };
+
+  document.getElementById('ramp-magma').style.background = rampCss(MAGMA);
+
+  // ---- controls
+
+  DATA.wafers.forEach(function (raw) {
+    var b = document.createElement('button');
+    b.className = 'wafer-option';
+    b.type = 'button';
+    b.dataset.id = raw.id;
+    b.innerHTML = '<span class="pat"></span><span class="meta"></span><span class="id"></span>';
+    b.querySelector('.pat').textContent = raw.pattern;
+    b.querySelector('.meta').textContent = raw.rows.length + ' dies';
+    b.querySelector('.id').textContent = raw.id;
+    b.addEventListener('click', function () {
+      if (state.waferId === raw.id) return;
+      state.waferId = raw.id;
+      stop();
+      compute(true);
+      state.frame = BUDGET;
+      renderAll();
+    });
+    el.waferList.appendChild(b);
+  });
+
+  DATA.loop.seeds.forEach(function (seed) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = 'seed ' + seed;
+    b.dataset.seed = String(seed);
+    b.addEventListener('click', function () {
+      if (state.seed === seed) return;
+      state.seed = seed;
+      stop();
+      compute(true);
+      state.frame = BUDGET;
+      renderAll();
+    });
+    el.seedSeg.appendChild(b);
+  });
+
+  TERM_NAMES.forEach(function (term) {
+    var label = document.createElement('label');
+    label.className = 'term-toggle';
+    label.innerHTML = '<input type="checkbox" checked><span class="name"></span><span class="what"></span>';
+    label.dataset.term = term;
+    label.querySelector('.name').textContent = term;
+    var box = label.querySelector('input');
+    box.dataset.term = term;
+    box.addEventListener('change', function () {
+      var next = TERM_NAMES.filter(function (name) {
+        return el.terms.querySelector('input[data-term="' + name + '"]').checked;
+      });
+      if (next.length === 0) { box.checked = true; return; }
+      state.terms = next;
+      stop();
+      compute(false);
+      renderAll();
+    });
+    el.terms.appendChild(label);
+  });
+
+  Array.prototype.forEach.call(el.langSeg.children, function (b) {
+    b.addEventListener('click', function () {
+      if (state.lang === b.dataset.lang) return;
+      state.lang = b.dataset.lang;
+      try { localStorage.setItem('playground-lang', state.lang); } catch (e) { /* blocked */ }
+      applyLanguage();
+      renderAll();
+    });
+  });
+
+  el.scrub.addEventListener('input', function () {
+    stop();
+    state.frame = Number(el.scrub.value);
+    renderFrame();
+  });
+
+  el.step.addEventListener('click', function () {
+    stop();
+    state.frame = state.frame >= BUDGET ? 0 : state.frame + 1;
+    renderFrame();
+  });
+
+  el.play.addEventListener('click', function () {
+    if (state.playing) { stop(); return; }
+    state.frame = 0;
+    state.playing = true;
+    el.play.textContent = t('bPause');
+    renderFrame();
+    tick();
+  });
+
+  var timer = null;
+  function tick() {
+    timer = setTimeout(function () {
+      if (!state.playing) return;
+      if (state.frame >= BUDGET) { stop(); return; }
+      state.frame += 1;
+      renderFrame();
+      tick();
+    }, 130);
+  }
+
+  function stop() {
+    state.playing = false;
+    if (timer) { clearTimeout(timer); timer = null; }
+    el.play.textContent = t('bPlay');
+  }
+
+  // ---- language
+
+  function applyLanguage() {
+    document.documentElement.lang = state.lang;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function (node) {
+      node.textContent = t(node.dataset.i18n);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-html]'), function (node) {
+      node.innerHTML = t(node.dataset.i18nHtml);
+    });
+    Array.prototype.forEach.call(el.terms.children, function (label) {
+      label.querySelector('.what').textContent = TERM_COPY[state.lang][label.dataset.term];
+    });
+    Array.prototype.forEach.call(el.langSeg.children, function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.lang === state.lang));
+    });
+    document.getElementById('home-link').setAttribute('href', state.lang === 'ko' ? './ko/' : './');
+    document.getElementById('budget-aside').textContent =
+      t('budgetAside')(INITIAL, INITIAL + BUDGET);
+    document.getElementById('curve-aside').textContent = META.headline.metric;
+    el.chipParity.innerHTML = t('chipParity')(META);
+    el.chipData.innerHTML = t('chipData')(META);
+    el.noteParity.innerHTML = t('n1p')(META);
+    el.noteDivergeHead.textContent = t('n2h')(META);
+    el.noteDiverge.innerHTML = t('n2p')(META);
+    el.noteHeadline.innerHTML = t('n4p')(META);
+    if (!state.playing) el.play.textContent = t('bPlay');
+  }
+
+  // ---- computation
+
+  function compute(waferChanged) {
+    var wafer = prepared[state.waferId];
+    var seedBlock = wafer.seeds[String(state.seed)];
+    var initial = seedBlock.initial;
+
+    episodes.nano = runEpisode(wafer, { initial: initial, budget: BUDGET, terms: state.terms });
+
+    var key = state.waferId + '|' + state.seed;
+    if (waferChanged || !baselineCache[key]) {
+      baselineCache[key] = {
+        random: runEpisode(wafer, { initial: initial, budget: BUDGET, selections: seedBlock.random }),
+        grid: runEpisode(wafer, { initial: initial, budget: BUDGET, selections: seedBlock.grid })
+      };
+    }
+    episodes.random = baselineCache[key].random;
+    episodes.grid = baselineCache[key].grid;
+    episodes.priorScore = metrics(wafer.prior, wafer.reality);
+  }
+
+  // ---- rendering
+
+  function fmt(v) { return isFinite(v) ? v.toFixed(4) : '—'; }
+
+  function renderAll() {
+    Array.prototype.forEach.call(el.waferList.children, function (b) {
+      var on = b.dataset.id === state.waferId;
+      b.setAttribute('aria-pressed', String(on));
+      if (on) {
+        var top = b.offsetTop - el.waferList.offsetTop;
+        if (top < el.waferList.scrollTop ||
+            top + b.offsetHeight > el.waferList.scrollTop + el.waferList.clientHeight) {
+          el.waferList.scrollTop = Math.max(0, top - 6);
+        }
+      }
+    });
+    Array.prototype.forEach.call(el.seedSeg.children, function (b) {
+      b.setAttribute('aria-pressed', String(Number(b.dataset.seed) === state.seed));
+    });
+    Array.prototype.forEach.call(el.rulerow.children, function (fig) {
+      var term = fig.dataset.term;
+      if (term === 'acquisition') return;
+      var rank = state.terms.indexOf(term);
+      fig.classList.toggle('off', rank === -1);
+      fig.querySelector('.cap-note').textContent =
+        rank === -1 ? t('dropped') : (rank === state.terms.length - 1 ? '=' : '×');
+    });
+    el.ruleNote.textContent = state.terms.join(' × ');
+    renderCurve();
+    renderFrame();
+  }
+
+  function renderFrame() {
+    var wafer = prepared[state.waferId];
+    var frame = episodes.nano.frames[state.frame];
+    var observed = episodes.nano.observed.slice(0, frame.measurements);
+
+    el.scrub.value = String(state.frame);
+    el.scrubA.textContent = t('measuredOf')(frame.measurements);
+    el.scrubB.textContent = t('budgetUsed')(state.frame);
+    el.stageNote.textContent = wafer.id + ' · ' + wafer.pattern + ' · ' + wafer.n + ' ' +
+      t('dies') + ' · seed ' + state.seed;
+    el.capRecon.textContent = t('reconNote')(frame.measurements);
+    el.capAcq.textContent = frame.spent ? t('spentNext') : t('selected');
+
+    drawField(canvases.prior, wafer, wafer.prior, MAGMA, { lo: 0, hi: 1 });
+    drawField(canvases.pred, wafer, frame.prediction, MAGMA, {
+      lo: 0, hi: 1, measured: observed, highlight: frame.selected
+    });
+    drawField(canvases.truth, wafer, wafer.reality, MAGMA, { lo: 0, hi: 1 });
+
+    if (frame.maps) {
+      drawField(canvases.unc, wafer, frame.maps.uncertainty, VIRIDIS, { lo: 0, hi: 1 });
+      drawField(canvases.dis, wafer, frame.maps.disagreement, CIVIDIS, { lo: 0, hi: 1 });
+      drawField(canvases.nov, wafer, frame.maps.novelty, BONE, { lo: 0, hi: 1 });
+      var acq = frame.maps.acquisition;
+      var shown = new Float64Array(wafer.n);
+      for (var i = 0; i < wafer.n; i++) shown[i] = isFinite(acq[i]) ? acq[i] : 0;
+      drawField(canvases.acq, wafer, shown, MAGMA, { highlight: frame.selected, measured: observed });
+    }
+
+    renderScores(frame);
+    renderTrace();
+    renderMarker();
+  }
+
+  function renderScores(frame) {
+    var idx = state.frame;
+    var rows = [
+      { name: t('rowPrior'), mae: episodes.priorScore.mae, balanced: episodes.priorScore.balanced, cls: '' },
+      { name: 'NANO', mae: frame.mae, balanced: frame.balanced, cls: 'is-nano' },
+      { name: 'Random', mae: episodes.random.frames[idx].mae, balanced: episodes.random.frames[idx].balanced, cls: '' },
+      { name: 'Grid', mae: episodes.grid.frames[idx].mae, balanced: episodes.grid.frames[idx].balanced, cls: '' }
+    ];
+    el.scoreBody.innerHTML = '';
+    rows.forEach(function (row) {
+      var tr = document.createElement('tr');
+      tr.className = row.cls;
+      [row.name, fmt(row.balanced), fmt(row.mae)].forEach(function (text) {
+        var td = document.createElement('td');
+        td.textContent = text;
+        tr.appendChild(td);
+      });
+      el.scoreBody.appendChild(tr);
+    });
+
+    var margin = Math.min(rows[2].balanced, rows[3].balanced) - rows[1].balanced;
+    el.scoreNote.textContent =
+      (margin >= 0 ? '+' : '−') + Math.abs(margin).toFixed(4) + ' ' + t('vsBaseline');
+    el.scoreNote.style.color = margin >= 0 ? 'var(--good)' : 'var(--bad)';
+  }
+
+  function renderTrace() {
+    var frames = episodes.nano.frames;
+    var start = Math.max(0, state.frame - 7);
+    var lines = [];
+    for (var i = start; i <= state.frame; i++) {
+      var f = frames[i];
+      if (f.selected === null || !f.termValues) continue;
+      var values = f.termValues;
+      var isNow = i === state.frame;
+      var parts = state.terms.map(function (term) {
+        return term.charAt(0) + ' ' + values[term].toFixed(2);
+      }).join('  ');
+      lines.push(
+        (isNow ? '<b>' : '') +
+        String(f.measurements).padStart(3) +
+        '  die ' + String(f.selected).padStart(5) +
+        '  ' + parts +
+        '  = ' + values.acquisition.toFixed(3) +
+        '  ' + (f.measured > 0.5 ? '<span class="fail">FAIL</span>' : 'pass') +
+        (isNow ? '</b>' : '')
+      );
+    }
+    if (!lines.length) lines.push(t('traceEmpty'));
+    el.trace.innerHTML = lines.join('\n');
+  }
+
+  // ---- error curve
+
+  var CURVE = { w: 520, h: 250, l: 52, r: 12, t: 14, b: 34 };
+
+  function series(episode) {
+    return episode.frames.map(function (f) { return f.balanced; });
+  }
+
+  function renderCurve() {
+    var nano = series(episodes.nano);
+    var rnd = series(episodes.random);
+    var grd = series(episodes.grid);
+    var prior = episodes.priorScore.balanced;
+
+    var all = nano.concat(rnd, grd, [prior]).filter(isFinite);
+    var lo = Math.min.apply(null, all);
+    var hi = Math.max.apply(null, all);
+    var pad = (hi - lo) * 0.12 || 0.02;
+    lo = Math.max(0, lo - pad);
+    hi = hi + pad;
+
+    var innerW = CURVE.w - CURVE.l - CURVE.r;
+    var innerH = CURVE.h - CURVE.t - CURVE.b;
+
+    function x(step) { return CURVE.l + (step / BUDGET) * innerW; }
+    function y(value) { return CURVE.t + innerH - ((value - lo) / (hi - lo)) * innerH; }
+
+    function path(values) {
+      return values.map(function (v, i) {
+        return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1);
+      }).join(' ');
+    }
+
+    var parts = [];
+    for (var g = 0; g <= 4; g++) {
+      var value = lo + (hi - lo) * (g / 4);
+      var yy = y(value).toFixed(1);
+      parts.push('<line x1="' + CURVE.l + '" y1="' + yy + '" x2="' + (CURVE.w - CURVE.r) +
+        '" y2="' + yy + '" stroke="var(--line-soft)" stroke-width="1"/>');
+      parts.push('<text x="' + (CURVE.l - 8) + '" y="' + (Number(yy) + 3.5) +
+        '" text-anchor="end" fill="var(--faint)" font-family="IBM Plex Mono, monospace" font-size="10">' +
+        value.toFixed(3) + '</text>');
+    }
+
+    [0, 15, 30, 45, 60].forEach(function (step) {
+      parts.push('<text x="' + x(step).toFixed(1) + '" y="' + (CURVE.h - 12) +
+        '" text-anchor="middle" fill="var(--faint)" font-family="IBM Plex Mono, monospace" font-size="10">' +
+        (INITIAL + step) + '</text>');
+    });
+    parts.push('<text x="' + (CURVE.l + innerW / 2) + '" y="' + (CURVE.h - 1) +
+      '" text-anchor="middle" fill="var(--faint)" font-family="IBM Plex Sans Condensed, sans-serif" font-size="10" letter-spacing="1">MEASUREMENTS</text>');
+
+    parts.push('<line x1="' + CURVE.l + '" y1="' + y(prior).toFixed(1) + '" x2="' + (CURVE.w - CURVE.r) +
+      '" y2="' + y(prior).toFixed(1) + '" stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="4 4"/>');
+    parts.push('<path d="' + path(grd) + '" fill="none" stroke="var(--dim)" stroke-width="1.6"/>');
+    parts.push('<path d="' + path(rnd) + '" fill="none" stroke="var(--warn)" stroke-width="1.6"/>');
+    parts.push('<path d="' + path(nano) + '" fill="none" stroke="var(--accent)" stroke-width="2.4"/>');
+    parts.push('<g id="curve-marker"></g>');
+
+    el.curve.innerHTML = parts.join('');
+    el.curve._scale = { x: x, y: y, nano: nano };
+  }
+
+  function renderMarker() {
+    var g = el.curve.querySelector('#curve-marker');
+    if (!g || !el.curve._scale) return;
+    var s = el.curve._scale;
+    var xx = s.x(state.frame).toFixed(1);
+    var yy = s.y(s.nano[state.frame]).toFixed(1);
+    g.innerHTML =
+      '<line x1="' + xx + '" y1="' + CURVE.t + '" x2="' + xx + '" y2="' + (CURVE.h - CURVE.b) +
+      '" stroke="var(--accent)" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>' +
+      '<circle cx="' + xx + '" cy="' + yy + '" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="1.5"/>';
+  }
+
+  applyLanguage();
+  compute(true);
+  renderAll();
+})();
+</script>
+</body>
+</html>

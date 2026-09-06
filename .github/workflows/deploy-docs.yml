@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - 'playground/**'
       - 'results/**'
       - 'scripts/**'
       - 'package.json'
@@ -45,6 +46,13 @@ jobs:
 
       - name: Sync experiment figures into the site
         run: npm run sync:assets
+
+      # The playground page prints "N of M traces match Python". This replays the
+      # exported traces through the engine that page actually ships and fails the
+      # deploy on any divergence outside the documented novelty tie-break, so the
+      # claim is checked against the artifact being published, not against a copy.
+      - name: Check the playground against the Python traces
+        run: npm run check:playground
 
       # config.mts derives the base path from GITHUB_REPOSITORY, which Actions
       # always sets, so project Pages (/<repo>/) and user or organisation Pages

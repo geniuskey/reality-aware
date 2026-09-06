@@ -10,8 +10,8 @@ Every figure and every number on this page is rendered from one file,
 chart and the home page cannot disagree with each other.
 
 ::: tip Published run — WM-811K, 12 wafers × 5 seeds
-Written by `python -m nano.benchmark --ablation` against a local copy of WM-811K. The dataset is not
-committed; `data/subsets/wm811k_eval.json` names the twelve wafers, so the evaluation set can be
+Written by `python -m nano.benchmark --ablation` against a local copy of WM-811K. The raw dataset is
+not committed; `data/subsets/wm811k_eval.json` names the twelve wafers, so the evaluation set can be
 rebuilt exactly. Two things below are worth knowing before reading the rest: NANO separates from
 Random and Grid on the primary metric and **not** on plain MAE, and the ablation finds a reduced rule
 beating the published one.

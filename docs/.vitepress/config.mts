@@ -23,6 +23,14 @@ const descriptionEn =
 const descriptionKo =
   '무엇을 모르는지 스스로 식별하고, Sim2Real 격차를 줄이는 데 가장 가치 있는 다음 측정을 선택하는 자율 계측 에이전트.'
 
+/**
+ * The playground is a standalone page in `public/`, not a VitePress route. The
+ * theme prepends the base to a root-relative link, and the page picks its own
+ * language from the query string rather than from a locale directory.
+ */
+const playgroundLink = (prefix: string) =>
+  `/playground.html${prefix === '/ko' ? '?lang=ko' : ''}`
+
 /** Nav and sidebar for one locale. `prefix` is '' for English, '/ko' for Korean. */
 function navigation(prefix: string, l: Record<string, string>) {
   const nav: DefaultTheme.NavItem[] = [
@@ -31,6 +39,7 @@ function navigation(prefix: string, l: Record<string, string>) {
     { text: l.data, link: `${prefix}/data` },
     { text: l.results, link: `${prefix}/benchmark` },
     { text: l.demo, link: `${prefix}/demo` },
+    { text: l.playground, link: playgroundLink(prefix) },
     { text: l.reproduce, link: `${prefix}/reproducibility` }
   ]
 
@@ -54,7 +63,8 @@ function navigation(prefix: string, l: Record<string, string>) {
       items: [
         { text: l.dataPage, link: `${prefix}/data` },
         { text: l.benchmark, link: `${prefix}/benchmark` },
-        { text: l.demoPage, link: `${prefix}/demo` }
+        { text: l.demoPage, link: `${prefix}/demo` },
+        { text: l.playgroundPage, link: playgroundLink(prefix) }
       ]
     },
     {
@@ -72,6 +82,7 @@ const en = navigation('', {
   data: 'Data',
   results: 'Results',
   demo: 'Demo',
+  playground: 'Playground',
   reproduce: 'Reproduce',
   groupWhy: 'Why',
   groupHow: 'How',
@@ -84,6 +95,7 @@ const en = navigation('', {
   dataPage: 'Dataset & Design',
   benchmark: 'Benchmark',
   demoPage: 'Demo',
+  playgroundPage: 'Playground',
   reproducePage: 'Reproducibility'
 })
 
@@ -93,6 +105,7 @@ const ko = navigation('/ko', {
   data: '데이터',
   results: '결과',
   demo: '데모',
+  playground: '플레이그라운드',
   reproduce: '재현',
   groupWhy: '왜',
   groupHow: '어떻게',
@@ -105,6 +118,7 @@ const ko = navigation('/ko', {
   dataPage: '데이터셋과 실험 설계',
   benchmark: '벤치마크',
   demoPage: '데모',
+  playgroundPage: '플레이그라운드',
   reproducePage: '재현 방법'
 })
 

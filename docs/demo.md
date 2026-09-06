@@ -5,9 +5,9 @@ description: A single NANO episode, step by step - biased prior, sparse start, t
 
 # Demo
 
-This page is static by design. GitHub Pages serves files, not Python, so the demo here is the
-recording of a real run rather than a live one. The interactive version runs locally — see
-[Reproduce](./reproducibility).
+The figures on this page are a recording: one real episode, frozen. If you would rather drive the
+loop yourself, the [playground](/playground.html) re-runs it in your browser on the same twelve
+wafers — switch the terms of the acquisition rule on and off and watch the choices change.
 
 ::: tip Recorded from a real run
 Every figure below is one episode on `wm811k-645735` (Edge-Ring, 533 dies), seed 0, recorded with

@@ -82,10 +82,17 @@ and no analytics.
 | Components | `docs/.vitepress/theme/components/` | `AgentLoop`, `WaferComparison`, `BenchmarkChart`, `BenchmarkTable`, `EvidenceStrip`, `MetricCard`, `ResultAsset` |
 | Asset sync | `scripts/sync-doc-assets.mjs` | Copies published figures from `results/` into `docs/public/results/` |
 | Figure scripts | `scripts/plot_*.py`, `scripts/record_demo.py` | Regenerate one published figure at a time from a run |
+| Playground source | `playground/template.html` | The page, minus its wafers: markup, styles, and a JavaScript port of the loop |
+| Playground build | `nano/playground.py` | Embeds the evaluation wafers and the published configuration, writing `docs/public/playground.html` |
+| Playground check | `scripts/check-playground-parity.mjs` | Replays Python's decisions through the engine that page ships, and stamps the count into it |
 | Deployment | `.github/workflows/deploy-docs.yml` | Builds on push to `main` and publishes to GitHub Pages |
 
 Components render at build time, so the pages carry their content as static HTML. With JavaScript
 disabled the prose, the tables, the wafer schematic and the result figures all still read; only
 Mermaid diagrams and the search box need the client runtime.
+
+The one exception is the [playground](/playground.html), which re-runs the loop in the browser and
+is therefore nothing without JavaScript. It is still a file, not a service: the twelve evaluation
+wafers and their priors are embedded in the page, so it fetches nothing at runtime either.
 
 Next: [run it yourself →](./reproducibility)

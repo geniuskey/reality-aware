@@ -54,6 +54,21 @@ It copies known figure names from `results/` into `docs/public/results/`, skippi
 and reports what it did. Missing figures are not an error: pages render an explicit
 *Run benchmark to generate results* state instead of a broken image, and the build still succeeds.
 
+### Rebuilding the playground
+
+The [playground](/playground.html) carries the twelve evaluation wafers inside the page, so it has
+to be rebuilt from a local copy of the dataset whenever its source or the published results change:
+
+```bash
+npm run build:playground   # python -m nano.playground: embeds the wafers, writes the page
+npm run check:playground   # replays Python's decisions through the page's own engine
+```
+
+The first refuses to run on stand-in wafers, because the page tells its reader it is showing
+WM-811K. The second is what puts the *N of M traces match Python* count on the page, and it runs in
+CI on every deploy, so a divergence the browser port introduces fails the publish rather than
+shipping quietly.
+
 ## Agent and benchmark
 
 Verified on Python 3.11.
@@ -89,7 +104,7 @@ dataset number. Results from a stand-in run are not committed to this repository
 
 ### Getting the dataset
 
-WM-811K is not committed here — see [Dataset](./data) for the distribution links and terms. The
+The WM-811K distribution is not committed here — see [Dataset](./data) for the links and terms. The
 expected local layout is:
 
 ```text

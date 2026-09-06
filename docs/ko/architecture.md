@@ -80,10 +80,17 @@ VitePress 빌드다.
 | 에셋 로더 | `docs/.vitepress/data/assets.data.mts` | `docs/public/results/`를 나열하여 누락된 그림이 대기 상태로 격하되도록 처리 |
 | 컴포넌트 | `docs/.vitepress/theme/components/` | `AgentLoop`, `WaferComparison`, `BenchmarkChart`, `BenchmarkTable`, `EvidenceStrip`, `MetricCard`, `ResultAsset` |
 | 에셋 동기화 | `scripts/sync-doc-assets.mjs` | 게시된 그림을 `results/`에서 `docs/public/results/`로 복사 |
+| 플레이그라운드 소스 | `playground/template.html` | 웨이퍼를 뺀 페이지 자체 — 마크업, 스타일, 그리고 루프의 JavaScript 이식본 |
+| 플레이그라운드 빌드 | `nano/playground.py` | 평가 웨이퍼와 게시된 설정을 심어 `docs/public/playground.html`을 작성 |
+| 플레이그라운드 대조 | `scripts/check-playground-parity.mjs` | Python의 결정을 그 페이지가 실제로 싣고 있는 엔진으로 재생하고 결과를 페이지에 새김 |
 | 배포 | `.github/workflows/deploy-docs.yml` | `main`에 푸시될 때 빌드하고 GitHub Pages에 게시 |
 
 컴포넌트는 빌드 시점에 렌더링되므로, 페이지는 내용을 정적 HTML로 담고 있다. JavaScript를
 비활성화해도 본문, 표, 웨이퍼 도식, 결과 그림은 모두 그대로 읽힌다. 클라이언트 런타임이 필요한
 것은 Mermaid 다이어그램과 검색창뿐이다.
+
+예외는 [플레이그라운드](/playground.html?lang=ko) 하나다. 브라우저에서 루프를 다시 돌리므로
+JavaScript 없이는 아무것도 아니다. 그래도 서비스가 아니라 파일이다. 평가 웨이퍼 12장과 그
+prior가 페이지 안에 들어 있어서 실행 중에 아무것도 가져오지 않는다.
 
 다음: [직접 실행해 보기 →](./reproducibility)

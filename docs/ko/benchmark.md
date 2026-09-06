@@ -9,8 +9,8 @@ description: 동일한 측정 예산, 동일한 초기 관측, 동일한 웨이�
 여기에 손으로 마크다운에 입력한 값은 없으므로, 표와 차트와 홈 페이지가 서로 어긋날 수 없다.
 
 ::: tip 게시된 실행 — WM-811K, 웨이퍼 12장 × 시드 5개
-로컬에 내려받은 WM-811K에 대해 `python -m nano.benchmark --ablation`으로 기록한 결과다. 데이터셋
-자체는 커밋하지 않으며, `data/subsets/wm811k_eval.json`이 웨이퍼 12장을 지정하므로 평가 세트는
+로컬에 내려받은 WM-811K에 대해 `python -m nano.benchmark --ablation`으로 기록한 결과다. 원본
+데이터셋은 커밋하지 않으며, `data/subsets/wm811k_eval.json`이 웨이퍼 12장을 지정하므로 평가 세트는
 정확히 재구성할 수 있다. 아래를 읽기 전에 알아둘 것이 두 가지다. NANO는 주 지표에서는 Random·Grid와
 갈라지지만 일반 MAE에서는 **갈라지지 않으며**, ablation에서는 축약된 규칙이 게시된 규칙을 이긴다.
 

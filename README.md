@@ -7,6 +7,9 @@ valuable measurement to close the Sim2Real gap.
 
 Docs site: <https://geniuskey.github.io/reality-aware/> (Korean: <https://geniuskey.github.io/reality-aware/ko/>)
 
+Playground — run the loop on the real wafers, in a browser:
+<https://geniuskey.github.io/reality-aware/playground.html>
+
 ## Status
 
 A benchmark run against WM-811K is published: 12 wafers × 5 seeds, 20 initial measurements plus a
@@ -15,12 +18,14 @@ both intervals clear of zero. On plain MAE it is **not separated** from either. 
 same run finds `uncertainty` alone beating the published three-term rule by 2.2% [0.6, 4.3] — a
 result against the design, which is why it is on the benchmark page and not in a footnote.
 
-WM-811K itself is not committed. `data/subsets/wm811k_eval.json` names the twelve wafers and
-`results/benchmark_summary.json` holds every number the site renders, so the run can be rebuilt and
-checked without redistributing the dataset. The pipeline also runs without it, on clearly labelled
-stand-in wafers (`--synthetic`), which is how the code is tested. Those numbers are never committed
-here and the site prints the wafer source under every results table, so a stand-in number cannot be
-read as a dataset number.
+The WM-811K distribution is not committed here. `data/subsets/wm811k_eval.json` names the twelve
+wafers and `results/benchmark_summary.json` holds every number the site renders, so the run can be
+rebuilt and checked without redistributing the dataset. The playground is the one narrow exception:
+it re-runs the loop in the browser, so it embeds those twelve wafers' die coordinates and pass/fail
+labels — 18,241 dies, about 0.002% of the 811,457 maps. The pipeline also runs without the dataset,
+on clearly labelled stand-in wafers (`--synthetic`), which is how the code is tested. Those numbers
+are never committed here and the site prints the wafer source under every results table, so a
+stand-in number cannot be read as a dataset number.
 
 See [Honest Scope](https://geniuskey.github.io/reality-aware/limitations) for what is claimed and
 what is not.
@@ -120,12 +125,13 @@ published.
 | --- | --- |
 | `nano/` | The Python package: data, prior, observation tool, model, policy, baselines, agent, evaluation, figures |
 | `tests/` | Test suite, including a leakage test that flips hidden reality at unmeasured dies and requires an identical trajectory |
-| `data/subsets/` | Versioned evaluation index derived from WM-811K (the dataset itself is never committed) |
+| `data/subsets/` | Versioned evaluation index derived from WM-811K (the raw maps are never committed) |
 | `docs/` | English Markdown pages, VitePress config, theme and Vue components |
 | `docs/ko/` | Korean translation of every page |
-| `docs/public/` | Logo, favicon, social card, published result figures |
+| `docs/public/` | Logo, favicon, social card, published result figures, the built playground page |
+| `playground/` | Playground source (`template.html`) and the Python traces its parity check replays |
 | `results/` | Canonical benchmark output — `benchmark_summary.json` and generated figures |
-| `scripts/` | Figure scripts (`plot_*.py`, `record_demo.py`), `sync-doc-assets.mjs`, social-card source |
+| `scripts/` | Figure scripts (`plot_*.py`, `record_demo.py`), `sync-doc-assets.mjs`, `check-playground-parity.mjs`, social-card source |
 | `.github/workflows/` | Pages deployment |
 
 `results/` is the single source of truth for numbers. Nothing is hand-typed into the Markdown, so a
