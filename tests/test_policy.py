@@ -74,6 +74,40 @@ def test_novelty_prefers_the_die_furthest_from_what_was_measured(wafer, state):
     assert terms["novelty"][int(np.argmax(distance))] == pytest.approx(1.0)
 
 
+def test_an_ablated_rule_multiplies_only_its_own_terms(wafer, state):
+    estimate, mask = state
+    policy = AcquisitionPolicy(("uncertainty", "disagreement"))
+    terms = policy.score_terms(estimate, mask, wafer.coords)
+
+    expected = terms["uncertainty"] * terms["disagreement"]
+    np.testing.assert_allclose(terms["acquisition"][~mask], expected[~mask])
+    # The unused term is still computed and returned, so a figure can show it.
+    assert terms["novelty"].shape == expected.shape
+
+
+def test_an_ablated_decision_traces_only_the_terms_it_used(wafer, state, rng):
+    estimate, mask = state
+    policy = AcquisitionPolicy(("uncertainty",))
+    decision = policy.select(estimate, mask, wafer.coords, rng)
+
+    assert set(decision.terms) == {"uncertainty"}
+    assert decision.terms["uncertainty"] == pytest.approx(decision.score)
+
+
+def test_an_ablated_rule_names_itself(wafer):
+    assert AcquisitionPolicy().name == "nano"
+    assert AcquisitionPolicy().rule == "uncertainty x disagreement x novelty"
+    assert AcquisitionPolicy(("uncertainty", "novelty")).name == "nano_un"
+    assert AcquisitionPolicy(("uncertainty",)).label == "uncertainty"
+
+
+def test_a_rule_with_no_terms_or_unknown_terms_is_refused():
+    with pytest.raises(ValueError, match="unknown acquisition term"):
+        AcquisitionPolicy(("uncertainty", "vibes"))
+    with pytest.raises(ValueError, match="at least one term"):
+        AcquisitionPolicy(())
+
+
 def test_ties_are_broken_by_the_seeded_generator():
     scores = np.array([1.0, 1.0, 1.0, 0.0])
     picks = {argmax_with_tiebreak(scores, np.random.default_rng(seed)) for seed in range(20)}

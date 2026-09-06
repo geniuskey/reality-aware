@@ -12,6 +12,7 @@ against the numbers that produced it.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Sequence
 
 import numpy as np
 
@@ -34,15 +35,63 @@ class Decision:
     n_candidates: int = 0
 
 
+TERMS = ("uncertainty", "disagreement", "novelty")
+
+ABLATIONS = {
+    "nano": TERMS,
+    "nano_u": ("uncertainty",),
+    "nano_ud": ("uncertainty", "disagreement"),
+    "nano_un": ("uncertainty", "novelty"),
+    "nano_dn": ("disagreement", "novelty"),
+}
+"""Which terms each ablation arm multiplies.
+
+The full rule is a product of three terms, and a product of three terms is a
+claim: that each one changes the decision. Dropping them one at a time is the
+only way to find out, and `python -m nano.benchmark --ablation` runs exactly
+these arms through the same loop under the same budget as everything else.
+"""
+
+
 class AcquisitionPolicy:
-    """Pick the unmeasured die with the highest acquisition score."""
+    """Pick the unmeasured die with the highest acquisition score.
 
-    name = "nano"
-    label = "NANO"
-    description = "highest acquisition score"
+    ``terms`` selects which factors enter the product. The default is the full
+    three-term rule; the other combinations exist so the benchmark can show what
+    each term is worth instead of asserting it.
+    """
 
-    def __init__(self, *, eps: float = EPS) -> None:
+    def __init__(self, terms: Sequence[str] = TERMS, *, eps: float = EPS) -> None:
+        unknown = set(terms) - set(TERMS)
+        if unknown:
+            raise ValueError(f"unknown acquisition term(s): {sorted(unknown)}")
+        if not terms:
+            raise ValueError("an acquisition rule needs at least one term")
+        self.terms = tuple(terms)
         self.eps = float(eps)
+
+    @property
+    def name(self) -> str:
+        for key, terms in ABLATIONS.items():
+            if terms == self.terms:
+                return key
+        return "nano_" + "".join(term[0] for term in self.terms)
+
+    @property
+    def label(self) -> str:
+        if self.terms == TERMS:
+            return "NANO"
+        return " × ".join(self.terms)
+
+    @property
+    def description(self) -> str:
+        if self.terms == TERMS:
+            return "highest acquisition score"
+        return "ablation: " + " × ".join(self.terms) + " only"
+
+    @property
+    def rule(self) -> str:
+        return " x ".join(self.terms)
 
     def score_terms(
         self, estimate: RealityEstimate, observed_mask: np.ndarray, coords: np.ndarray
@@ -54,14 +103,16 @@ class AcquisitionPolicy:
         disagreement = _floor(_unit_scale(estimate.expected_disagreement), self.eps)
         novelty = _floor(_unit_scale(_distance_to_nearest(coords, observed_mask)), self.eps)
 
-        acquisition = uncertainty * disagreement * novelty
-        acquisition = np.where(observed_mask, -np.inf, acquisition)
-        return {
+        available = {
             "uncertainty": uncertainty,
             "disagreement": disagreement,
             "novelty": novelty,
-            "acquisition": acquisition,
         }
+        acquisition = np.ones_like(uncertainty)
+        for term in self.terms:
+            acquisition = acquisition * available[term]
+        acquisition = np.where(observed_mask, -np.inf, acquisition)
+        return {**available, "acquisition": acquisition}
 
     def select(
         self,
@@ -75,11 +126,7 @@ class AcquisitionPolicy:
         return Decision(
             index=index,
             score=float(terms["acquisition"][index]),
-            terms={
-                "uncertainty": float(terms["uncertainty"][index]),
-                "disagreement": float(terms["disagreement"][index]),
-                "novelty": float(terms["novelty"][index]),
-            },
+            terms={term: float(terms[term][index]) for term in self.terms},
             n_candidates=int((~np.asarray(observed_mask, dtype=bool)).sum()),
         )
 

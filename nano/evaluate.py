@@ -19,6 +19,7 @@ import numpy as np
 
 from nano.agent import EpisodeResult, draw_initial_mask, run_episode
 from nano.baselines import build_policies
+from nano.policy import ABLATIONS, TERMS, AcquisitionPolicy
 from nano.data import WaferRecord, summarise_patterns
 from nano.metrics import DEFAULT_PRIMARY, METRIC_LABELS, mae, metric_set, paired_bootstrap
 from nano.model import RealityModel, default_length_scale
@@ -55,6 +56,8 @@ def run_benchmark(
     length_scale: float | None = None,
     prior_weight: float = 0.5,
     primary_metric: str | None = None,
+    ablation: bool = False,
+    terms: Sequence[str] | None = None,
     dataset_block: dict | None = None,
 ) -> dict:
     """Run every strategy on every ``(wafer, seed)`` pair and summarise the result.
@@ -66,6 +69,7 @@ def run_benchmark(
         raise ValueError("no evaluation wafers were provided")
     bias = bias or BiasParams()
     target_kind = records[0].target_kind
+    terms = tuple(terms or TERMS)
     primary = primary_metric or DEFAULT_PRIMARY[target_kind]
     if primary not in METRIC_LABELS:
         raise ValueError(f"unknown metric {primary!r}; known: {sorted(METRIC_LABELS)}")
@@ -111,7 +115,7 @@ def run_benchmark(
                     metric_set(prediction, record.reality, target_kind)[primary], 6
                 )
 
-            for name, policy in build_policies(budget, record.coords).items():
+            for name, policy in _arms(budget, record.coords, ablation, terms).items():
                 model = RealityModel(
                     record.coords, prior, length_scale=model_scale, prior_weight=prior_weight
                 )
@@ -138,8 +142,11 @@ def run_benchmark(
 
             episodes.append(entry)
 
+    arms = _arms(budget, records[0].coords, ablation, terms)
     strategies = {}
-    for name, policy in build_policies(budget, records[0].coords).items():
+    for name, policy in arms.items():
+        if name in ABLATIONS and name != "nano":
+            continue  # ablation arms are reported separately, not as strategies
         strategies[name] = {
             "label": policy.label,
             "description": policy.description,
@@ -154,6 +161,18 @@ def run_benchmark(
                 for pattern, values in sorted(by_pattern[name].items())
             },
         }
+
+    ablation_block = {
+        name: {
+            "label": arms[name].label,
+            "rule": arms[name].rule,
+            "terms": list(arms[name].terms),
+            "final": _stats(scores[name][primary]),
+            "metrics": {metric: _stats(values) for metric, values in scores[name].items()},
+        }
+        for name in arms
+        if name in ABLATIONS and name != "nano"
+    }
 
     reference_block = {
         "prior": {
@@ -176,7 +195,7 @@ def run_benchmark(
     comparisons: dict[str, dict[str, dict]] = {}
     for metric in sorted(scores["nano"]):
         per_metric = {}
-        for name in list(strategies) + list(reference_block):
+        for name in list(strategies) + list(reference_block) + list(ablation_block):
             if name == "nano" or metric not in scores[name]:
                 continue
             values = np.asarray(scores[name][metric], dtype=float)
@@ -210,7 +229,7 @@ def run_benchmark(
             "grid_shape_note": "modal die grid across the evaluation wafers; wafers are never resized",
             "mean_dies_per_wafer": round(float(np.mean([r.n_dies for r in records])), 1),
             "episodes": len(episodes),
-            "acquisition_rule": ACQUISITION_RULE,
+            "acquisition_rule": " x ".join(terms),
             "prior_bias": bias.as_dict(),
             "model": {
                 "kernel": "gaussian",
@@ -230,6 +249,7 @@ def run_benchmark(
         "prior": {"initial_error": _stats(scores["prior"][primary])},
         "strategies": strategies,
         "references": reference_block,
+        "ablation": ablation_block,
         "comparisons": comparisons,
         "episodes": episodes,
         "assets": {
@@ -296,6 +316,21 @@ def _git_commit() -> str | None:
         return None
     commit = out.stdout.strip()
     return commit or None
+
+
+def _arms(budget: int, coords: np.ndarray, ablation: bool, terms: Sequence[str] = TERMS) -> dict:
+    """The arms one episode runs: the three strategies, plus ablations on request.
+
+    Ablation arms go through the same loop, the same budget and the same initial
+    mask as everything else — the only difference is which terms their
+    acquisition product contains.
+    """
+    arms = dict(build_policies(budget, coords, terms))
+    if ablation:
+        for name, terms in ABLATIONS.items():
+            if name != "nano":
+                arms[name] = AcquisitionPolicy(terms)
+    return arms
 
 
 def _constant_value(prior: np.ndarray, target_kind: str) -> float:

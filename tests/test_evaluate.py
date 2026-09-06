@@ -50,9 +50,57 @@ def test_summary_carries_every_field_the_site_requires(summary):
 def test_the_recorded_rule_is_the_rule_that_ran(summary):
     """A three-term product in the docs and a one-term rule in the code is the
     failure mode this project exists to argue against."""
-    assert summary["experiment"]["acquisition_rule"] == (
-        "uncertainty x simulation_disagreement x spatial_novelty"
+    assert summary["experiment"]["acquisition_rule"] == "uncertainty x disagreement x novelty"
+
+
+def test_a_reduced_rule_is_recorded_as_the_reduced_rule():
+    """Run fewer terms and the file must say so — that is the whole point."""
+    from nano.data import synthetic_wafers
+
+    reduced = run_benchmark(
+        synthetic_wafers(2, seed=1, grid=20),
+        seeds=[0],
+        initial_measurements=8,
+        budget=8,
+        terms=["uncertainty", "disagreement"],
     )
+    assert reduced["experiment"]["acquisition_rule"] == "uncertainty x disagreement"
+
+
+def test_ablation_arms_are_scored_against_the_full_rule():
+    from nano.data import synthetic_wafers
+
+    summary = run_benchmark(
+        synthetic_wafers(2, seed=1, grid=20),
+        seeds=[0, 1],
+        initial_measurements=8,
+        budget=10,
+        ablation=True,
+    )
+    ablation = summary["ablation"]
+    assert set(ablation) == {"nano_u", "nano_ud", "nano_un", "nano_dn"}
+
+    # Ablations are not strategies: they do not appear in the main table.
+    assert set(summary["strategies"]) == {"nano", "random", "grid"}
+
+    primary = summary["metric"]["key"]
+    for name, arm in ablation.items():
+        assert arm["terms"] and set(arm["terms"]) <= {"uncertainty", "disagreement", "novelty"}
+        assert len(arm["terms"]) < 3
+        # Each one is paired against the full rule, interval and all.
+        assert name in summary["comparisons"][primary]
+
+
+def test_an_ablation_run_leaves_the_headline_arms_untouched():
+    """Adding arms must not change what the three published arms did."""
+    from nano.data import synthetic_wafers
+
+    kwargs = dict(seeds=[0], initial_measurements=8, budget=8)
+    plain = run_benchmark(synthetic_wafers(2, seed=1, grid=20), **kwargs)
+    with_ablation = run_benchmark(synthetic_wafers(2, seed=1, grid=20), ablation=True, **kwargs)
+
+    for name in ("nano", "random", "grid"):
+        assert plain["strategies"][name]["metrics"] == with_ablation["strategies"][name]["metrics"]
 
 
 def test_the_curve_covers_the_whole_budget_and_starts_from_a_shared_state(summary):

@@ -103,12 +103,12 @@ class GridPolicy:
         )
 
 
-def build_policies(budget: int, coords: np.ndarray) -> dict[str, object]:
+def build_policies(budget: int, coords: np.ndarray, terms=None) -> dict[str, object]:
     """The three arms of the benchmark, in the order they are reported."""
-    from nano.policy import AcquisitionPolicy
+    from nano.policy import TERMS, AcquisitionPolicy
 
     return {
-        "nano": AcquisitionPolicy(),
+        "nano": AcquisitionPolicy(terms or TERMS),
         "random": RandomPolicy(),
         "grid": GridPolicy(budget, coords),
     }

@@ -9,7 +9,7 @@ from nano.agent import draw_initial_mask, run_episode
 from nano.cli import RESULTS_DIR, add_experiment_args, add_source_args, resolve_wafers, source_warning
 from nano.evaluate import DEFAULT_OUTPUT, mae, run_benchmark, write_summary
 from nano.model import RealityModel
-from nano.policy import AcquisitionPolicy
+from nano.policy import TERMS, AcquisitionPolicy
 from nano.prior import BiasParams, make_biased_prior
 
 
@@ -26,6 +26,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUTPUT, help="results file to write")
     parser.add_argument(
         "--no-figures", action="store_true", help="skip figure generation (numbers only)"
+    )
+    parser.add_argument(
+        "--ablation",
+        action="store_true",
+        help="also run the acquisition rule with terms dropped, to show what each one is worth",
     )
     return parser
 
@@ -51,10 +56,13 @@ def main(argv: list[str] | None = None) -> int:
         length_scale=args.length_scale,
         prior_weight=args.prior_weight,
         primary_metric=args.metric,
+        ablation=args.ablation,
+        terms=args.terms,
         dataset_block=dataset_block,
     )
     path = write_summary(summary, args.out)
     _report(summary)
+    _report_ablation(summary)
     print(f"wrote {path}")
 
     if not args.no_figures:
@@ -88,6 +96,24 @@ def _report(summary: dict) -> None:
             if name in comparisons:
                 line += "   " + _verdict(comparisons[name])
             print(line)
+
+
+def _report_ablation(summary: dict) -> None:
+    """What each term of the acquisition product is actually worth."""
+    ablation = summary.get("ablation") or {}
+    if not ablation:
+        return
+    primary = summary["metric"]["key"]
+    comparisons = summary["comparisons"].get(primary, {})
+    print(f"  ablation on {summary['metrics'][primary]['name']} ↓ (full rule = NANO)")
+    full = summary["strategies"]["nano"]["final"]
+    print(f"     {'uncertainty × disagreement × novelty':<38} {full['mean']:.4f} ± {full['std']:.4f}")
+    for name, arm in ablation.items():
+        stats = arm["final"]
+        line = f"     {arm['rule'].replace(' x ', ' × '):<38} {stats['mean']:.4f} ± {stats['std']:.4f}"
+        if name in comparisons:
+            line += "   " + _verdict(comparisons[name])
+        print(line)
 
 
 def _verdict(comparison: dict) -> str:
@@ -126,7 +152,7 @@ def _figures(summary: dict, records, args: argparse.Namespace, bias: BiasParams)
     episode = run_episode(
         record,
         prior,
-        AcquisitionPolicy(),
+        AcquisitionPolicy(args.terms or TERMS),
         initial_mask=draw_initial_mask(record, args.initial, seed),
         budget=args.budget,
         seed=seed,

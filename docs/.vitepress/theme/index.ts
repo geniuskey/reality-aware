@@ -3,6 +3,7 @@ import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 import './custom.css'
 
+import AblationTable from './components/AblationTable.vue'
 import AgentLoop from './components/AgentLoop.vue'
 import BenchmarkChart from './components/BenchmarkChart.vue'
 import BenchmarkTable from './components/BenchmarkTable.vue'
@@ -26,6 +27,7 @@ export default {
     app.component('BenchmarkTable', BenchmarkTable)
     app.component('EvidenceStrip', EvidenceStrip)
     app.component('MetricCard', MetricCard)
+    app.component('AblationTable', AblationTable)
     app.component('ResultAsset', ResultAsset)
     app.component('WaferComparison', WaferComparison)
   }

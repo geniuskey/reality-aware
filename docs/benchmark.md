@@ -100,6 +100,20 @@ The interesting part of this curve is its shape, not just its endpoint. A select
 merely lucky converges at the same rate as Random and separates only at the end. A rule that is
 genuinely choosing informative locations should separate early, while budget still remains.
 
+## Does each term of the acquisition rule earn its place?
+
+The selection rule is a product of three terms, and a product of three terms is a claim: that each
+one changes the decision for the better. The way to find out is to drop them and re-run, so
+`python -m nano.benchmark --ablation` runs the reduced rules as extra arms — same loop, same budget,
+same initial observations, only the terms differ.
+
+<AblationTable />
+
+This is the table most likely to embarrass the rest of this site, which is exactly why it is here
+rather than in a notebook. A reduced rule that beats the published one means the term it dropped is
+costing accuracy, not buying it; the published rule stays what the [approach page](./approach)
+documents until a run on WM-811K says otherwise, and `--terms` runs any subset in the meantime.
+
 ## Prior versus corrected reconstruction
 
 <ResultAsset

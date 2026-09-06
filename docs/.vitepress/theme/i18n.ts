@@ -107,7 +107,7 @@ const en = {
     standIn: 'Stand-in wafers',
     noBudget: 'spends no budget',
     notSeparated: 'not separated from NANO',
-    wins: (wins: string, n: string) => `${wins}/${n} episodes better`,
+    wins: (wins: string, n: string) => `NANO better in ${wins}/${n} episodes`,
     secondaryCaption:
       'The same run scored on every other metric. A number marked * is one where the paired interval spans zero, so the arms are not separated on that metric.',
     secondaryNote:
@@ -122,6 +122,24 @@ const en = {
     emptyLink: 'Reproduce',
     emptyTail: 'page; it writes',
     emptyTailEnd: 'and this table fills itself in.'
+  },
+
+  ablation: {
+    caption: (metric: string) =>
+      `Final ${metric} for the acquisition rule with terms dropped. Every arm ran the same loop, the same budget and the same initial observations; only the terms of the product differ.`,
+    rule: 'Acquisition rule',
+    std: '± std',
+    verdict: 'Against the published rule',
+    published: 'published rule',
+    reference: 'reference',
+    notSeparated: 'not separated',
+    better: (pct: string) => `beats the published rule by ${pct}`,
+    worse: (pct: string) => `loses to the published rule by ${pct}`,
+    wins: (wins: string, n: string) =>
+      `this rule better in ${wins}/${n} episodes`,
+    note: 'A row that beats the published rule is a finding, not a footnote: the term it drops is costing accuracy on this wafer source rather than buying it.',
+    emptyLead: 'No ablation in this results file. Run',
+    emptyTail: ' and this table fills itself in.'
   },
 
   evidence: {
@@ -254,7 +272,7 @@ const ko: Strings = {
     standIn: '대체 웨이퍼',
     noBudget: '예산을 쓰지 않음',
     notSeparated: 'NANO와 구분되지 않음',
-    wins: (wins: string, n: string) => `${n}판 중 ${wins}판 우세`,
+    wins: (wins: string, n: string) => `${n}판 중 ${wins}판에서 NANO 우세`,
     secondaryCaption:
       '같은 실행을 나머지 모든 지표로 채점한 결과. *가 붙은 값은 페어링 신뢰구간이 0을 포함하는 경우로, 그 지표에서는 두 조건이 구분되지 않는다.',
     secondaryNote:
@@ -269,6 +287,23 @@ const ko: Strings = {
     emptyLink: '재현 방법',
     emptyTail: '페이지의 벤치마크를 실행하면',
     emptyTailEnd: '파일이 생성되고 이 표가 스스로 채워집니다.'
+  },
+
+  ablation: {
+    caption: (metric: string) =>
+      `획득 규칙에서 항을 하나씩 뺐을 때의 최종 ${metric}. 모든 arm은 같은 루프, 같은 예산, 같은 초기 관측으로 실행되었고, 곱에 들어가는 항만 다르다.`,
+    rule: '획득 규칙',
+    std: '± 표준편차',
+    verdict: '게시된 규칙과 비교',
+    published: '게시된 규칙',
+    reference: '기준',
+    notSeparated: '구분되지 않음',
+    better: (pct: string) => `게시된 규칙보다 ${pct} 더 좋음`,
+    worse: (pct: string) => `게시된 규칙보다 ${pct} 더 나쁨`,
+    wins: (wins: string, n: string) => `${n}판 중 ${wins}판에서 이 규칙이 우세`,
+    note: '게시된 규칙을 이기는 행은 각주가 아니라 결과다. 그 행이 뺀 항은 이 웨이퍼 출처에서 정확도를 사는 것이 아니라 깎고 있다는 뜻이다.',
+    emptyLead: '이 결과 파일에는 ablation이 없습니다.',
+    emptyTail: ' 를 실행하면 이 표가 스스로 채워집니다.'
   },
 
   evidence: {

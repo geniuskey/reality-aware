@@ -11,7 +11,7 @@ import numpy as np
 from nano.agent import EpisodeResult, draw_initial_mask, run_episode
 from nano.data import DEFAULT_RAW_PATH, DEFAULT_SUBSET_PATH, WaferRecord, load_wafers
 from nano.model import RealityModel
-from nano.policy import AcquisitionPolicy
+from nano.policy import TERMS, AcquisitionPolicy
 from nano.prior import BiasParams, make_biased_prior
 
 RESULTS_DIR = Path("results")
@@ -56,6 +56,16 @@ def add_experiment_args(parser: argparse.ArgumentParser) -> argparse.ArgumentPar
         type=float,
         default=None,
         help="model kernel length scale in die units (default: per-wafer, from wafer span)",
+    )
+    group.add_argument(
+        "--terms",
+        nargs="+",
+        default=None,
+        choices=["uncertainty", "disagreement", "novelty"],
+        help=(
+            "which terms the NANO acquisition product multiplies "
+            "(default: all three, the documented rule)"
+        ),
     )
     group.add_argument(
         "--metric",
@@ -124,7 +134,7 @@ def single_episode(
     episode = run_episode(
         record,
         prior,
-        policy or AcquisitionPolicy(),
+        policy or AcquisitionPolicy(getattr(args, "terms", None) or TERMS),
         initial_mask=draw_initial_mask(record, args.initial, seed),
         budget=args.budget,
         seed=seed,

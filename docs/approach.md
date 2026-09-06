@@ -112,6 +112,10 @@ the failure mode this project exists to argue against, so the rule that ran is w
 results file as `experiment.acquisition_rule`, `nano/policy.py` returns the per-term breakdown with
 every decision, and `tests/test_policy.py` asserts that the score of the selected die equals the
 product of the three terms in its own trace.
+
+Stating a rule is not the same as showing it helps. `python -m nano.benchmark --ablation` re-runs the
+loop with terms dropped, and the [benchmark page](./benchmark) publishes what each term is worth —
+including where a reduced rule beats this one.
 :::
 
 ## Stopping and determinism

@@ -40,6 +40,20 @@ nothing about the dataset. A run on the stand-in writes `dataset.name = "synthet
 note into the results file, prints a warning on every command, and is labelled in the results table
 on this site. Results from a stand-in run are not committed to this repository.
 
+### The third term of the acquisition rule does not pay for itself here
+
+`python -m nano.benchmark --ablation` runs the selection rule with terms dropped. On the stand-in
+wafer source, `uncertainty × disagreement` — the published rule with **spatial novelty removed** —
+beats the full three-term product, and the paired interval separates from zero. Dropping
+uncertainty or disagreement instead changes nothing that separates.
+
+That is a result against the design, and it is on the [benchmark page](./benchmark) rather than in a
+footnote. The published rule is still the three-term product, for one reason and not a good one:
+the finding is measured on a stand-in, and changing the documented rule on the strength of a
+synthetic proxy would be the tuning this page warns about two entries below. It is the first thing
+to re-run once WM-811K results exist, and `--terms uncertainty disagreement` runs the reduced rule
+today.
+
 ### The estimator has hyper-parameters, and they were chosen, not derived
 
 `length_scale` (a twelfth of the wafer span) and `prior_weight` (the prior counts as half a

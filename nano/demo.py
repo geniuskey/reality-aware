@@ -10,7 +10,7 @@ from nano.agent import draw_initial_mask, run_episode
 from nano.cli import RESULTS_DIR, add_experiment_args, add_source_args, resolve_wafers, source_warning
 from nano.evaluate import mae
 from nano.model import RealityModel
-from nano.policy import AcquisitionPolicy
+from nano.policy import TERMS, AcquisitionPolicy
 from nano.prior import BiasParams, make_biased_prior
 
 
@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
 
     record = records[args.wafer]
     prior = make_biased_prior(record, BiasParams())
-    policy = AcquisitionPolicy()
+    policy = AcquisitionPolicy(args.terms or TERMS)
     model = RealityModel(
         record.coords, prior, length_scale=args.length_scale, prior_weight=args.prior_weight
     )

@@ -111,6 +111,11 @@ next_index = argmax { acquisition(i) : observed_mask[i] == False }
 파일에 `experiment.acquisition_rule`로 기록되고, `nano/policy.py`는 모든 결정과 함께 항별
 분해를 반환하며, `tests/test_policy.py`는 선택된 다이의 점수가 그 결정 추적에 담긴 세 항의 곱과
 같음을 검증한다.
+
+규칙을 명시하는 것과 그 규칙이 도움이 된다는 것을 보이는 것은 다르다.
+`python -m nano.benchmark --ablation`은 항을 빼고 루프를 다시 실행하며,
+[벤치마크 페이지](./benchmark)는 각 항이 얼마나 값을 하는지 — 축약된 규칙이 이 규칙을 이기는
+경우까지 포함해 — 게시한다.
 :::
 
 ## 중단과 결정론
