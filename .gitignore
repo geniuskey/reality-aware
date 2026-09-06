@@ -26,3 +26,6 @@ __pycache__/
 # editors / os
 .DS_Store
 Thumbs.db
+
+# python packaging
+*.egg-info/

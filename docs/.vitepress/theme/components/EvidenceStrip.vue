@@ -16,7 +16,23 @@ const view = computed(() => {
   const random = s.random?.final?.mean
   const prior = summary.prior?.initial_error?.mean
 
+  // Which baselines the run actually separated from, at 95% over the paired
+  // episodes. Four numbers side by side invite a comparison the reader cannot
+  // check, so the run's own verdict is printed with them.
+  const comparisons = summary.comparisons?.[summary.metric?.key ?? 'mae'] ?? {}
+  const named = (key: string) => summary.strategies?.[key]?.label ?? key
+  const separated = Object.entries(comparisons)
+    .filter(([key]) => key in (summary.strategies ?? {}))
+    .filter(([, c]: [string, any]) => c.separates !== false && c.mean > 0)
+    .map(([key]) => named(key))
+  const notSeparated = Object.entries(comparisons)
+    .filter(([key]) => key in (summary.strategies ?? {}))
+    .filter(([, c]: [string, any]) => c.separates === false)
+    .map(([key]) => named(key))
+
   return {
+    separated,
+    notSeparated,
     metric: summary.metric?.name ?? 'error',
     unit: summary.metric?.unit,
     nano,
@@ -84,6 +100,19 @@ const view = computed(() => {
       <code>{{ benchmark.sourcePath }}</code>.
       <a href="./benchmark">{{ t.evidence.fullResults }}</a>
     </p>
+    <p class="nano-note">
+      <template v-if="view.separated.length">
+        {{ t.evidence.separated(view.separated.join(', ')) }}
+      </template>
+      <template v-if="view.notSeparated.length">
+        <span class="nano-inconclusive">
+          {{ t.evidence.notSeparated(view.notSeparated.join(', ')) }}
+        </span>
+      </template>
+      <template v-if="!view.separated.length && !view.notSeparated.length">
+        {{ t.evidence.noComparison }}
+      </template>
+    </p>
   </section>
 
   <section v-else class="nano-empty">
@@ -101,6 +130,11 @@ const view = computed(() => {
 </template>
 
 <style scoped>
+.nano-inconclusive {
+  color: var(--nano-gap);
+  font-weight: 600;
+}
+
 .nano-evidence {
   margin: 1.5rem 0;
 }

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nano-reality-aware"
+version = "0.1.0"
+description = "NANO - reality-aware active metrology agent for wafer maps"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+# Figures. Not needed to run the benchmark itself.
+figures = ["matplotlib>=3.7", "pillow>=10.0"]
+# Reading the raw WM-811K distribution (LSWMD.pkl is a pandas pickle).
+data = ["pandas>=2.0"]
+dev = [
+  "nano-reality-aware[figures,data]",
+  "pytest>=7.4",
+]
+
+[project.scripts]
+nano-benchmark = "nano.benchmark:main"
+nano-demo = "nano.demo:main"
+nano-subset = "nano.subset:main"
+
+[tool.setuptools.packages.find]
+include = ["nano*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["error::DeprecationWarning"]

@@ -7,29 +7,48 @@ const t = useStrings()
 
 /**
  * Final-error table. Same JSON as BenchmarkChart, so the numbers cannot drift
- * apart. Relative improvement is computed here, never hardcoded in Markdown.
+ * apart. Improvements are read from the run's own paired bootstrap rather than
+ * recomputed here: a difference of means without its interval is not a result,
+ * and an interval that spans zero is printed as "not separated".
  */
 const table = computed(() => {
   const summary = benchmark.summary
   if (!summary?.strategies) return null
 
-  const entries = Object.entries(summary.strategies)
-  const nano = summary.strategies.nano
+  const primary = summary.metric?.key ?? 'mae'
+  const comparisons = summary.comparisons?.[primary] ?? {}
 
-  const rows = entries.map(([key, s]) => {
-    const improvement =
-      key === 'nano' || !nano || !s.final?.mean
-        ? null
-        : ((s.final.mean - nano.final.mean) / s.final.mean) * 100
+  const toRow = (key: string, s: any, isReference: boolean) => {
+    const c = comparisons[key]
     return {
       key,
       label: s.label ?? key,
       description: s.description,
       mean: s.final?.mean,
       std: s.final?.std,
-      improvement
+      isReference,
+      comparison: c
+        ? {
+            separates: c.separates !== false,
+            // null when the baseline is exactly zero: an arm can be a fixed
+            // amount better than "no error at all", but not a percentage better.
+            improvement: typeof c.relative_mean === 'number' ? c.relative_mean : null,
+            low: c.relative_ci_low,
+            high: c.relative_ci_high,
+            delta: c.mean,
+            deltaLow: c.ci_low,
+            deltaHigh: c.ci_high,
+            wins: c.wins,
+            n: c.n
+          }
+        : null
     }
-  })
+  }
+
+  const rows = [
+    ...Object.entries(summary.strategies).map(([key, s]) => toRow(key, s, false)),
+    ...Object.entries(summary.references ?? {}).map(([key, s]) => toRow(key, s, true))
+  ]
 
   const exp = summary.experiment ?? {}
   return {
@@ -43,7 +62,35 @@ const table = computed(() => {
     budget: exp.measurement_budget,
     prior: summary.prior?.initial_error,
     generated: summary.generated_at,
-    commit: summary.git_commit
+    commit: summary.git_commit,
+    // A run on stand-in wafers writes a note into the results file. It is
+    // printed here rather than dropped, so numbers measured on a stand-in can
+    // never be read as numbers measured on the dataset.
+    dataset: summary.dataset?.name,
+    datasetNote: summary.dataset?.note,
+    primary,
+    // Every metric the run scored, so a claim that holds on one and fails on
+    // another cannot be presented as if it held on both.
+    secondary: Object.entries(summary.metrics ?? {})
+      .filter(([key]) => key !== primary)
+      .map(([key, meta]: [string, any]) => ({
+        key,
+        name: meta.name ?? key,
+        scope: meta.scope,
+        cells: rows.map((row) => {
+          const stats = (summary.strategies?.[row.key] ?? summary.references?.[row.key])?.metrics?.[
+            key
+          ]
+          const c = summary.comparisons?.[key]?.[row.key]
+          return {
+            key: row.key,
+            mean: stats?.mean,
+            separates: c ? c.separates !== false : null,
+            improvement: c?.relative_mean
+          }
+        })
+      }))
+      .filter((m) => m.cells.some((cell) => typeof cell.mean === 'number'))
   }
 })
 
@@ -75,19 +122,50 @@ const fmt = (v?: number | null, digits = 4) =>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in table.rows" :key="row.key" :data-nano="row.key === 'nano'">
-            <th scope="row">{{ row.label }}</th>
+          <tr
+            v-for="row in table.rows"
+            :key="row.key"
+            :data-nano="row.key === 'nano'"
+            :data-reference="row.isReference"
+          >
+            <th scope="row">
+              {{ row.label }}
+              <span v-if="row.isReference" class="nano-ref-tag">{{ t.table.noBudget }}</span>
+            </th>
             <td>{{ row.description ?? '—' }}</td>
             <td class="num">{{ fmt(row.mean) }}</td>
             <td class="num">{{ fmt(row.std) }}</td>
             <td class="num">
-              <template v-if="row.improvement === null">{{ t.table.reference }}</template>
-              <template v-else>
+              <template v-if="!row.comparison">{{ t.table.reference }}</template>
+              <template v-else-if="!row.comparison.separates">
+                <span class="nano-inconclusive">{{ t.table.notSeparated }}</span>
+                <span class="nano-ci">
+                  Δ {{ row.comparison.delta > 0 ? '+' : '' }}{{ fmt(row.comparison.delta) }},
+                  95% CI [{{ fmt(row.comparison.deltaLow) }}, {{ fmt(row.comparison.deltaHigh) }}],
+                  {{ t.table.wins(String(row.comparison.wins), String(row.comparison.n)) }}
+                </span>
+              </template>
+              <template v-else-if="row.comparison.improvement === null">
                 {{
-                  (row.improvement > 0 ? t.table.better : t.table.worse)(
-                    `${Math.abs(row.improvement).toFixed(1)}%`
+                  (row.comparison.delta > 0 ? t.table.better : t.table.worse)(
+                    fmt(Math.abs(row.comparison.delta))
                   )
                 }}
+                <span class="nano-ci">
+                  95% CI [{{ fmt(row.comparison.deltaLow) }}, {{ fmt(row.comparison.deltaHigh) }}],
+                  {{ t.table.wins(String(row.comparison.wins), String(row.comparison.n)) }}
+                </span>
+              </template>
+              <template v-else>
+                {{
+                  (row.comparison.improvement > 0 ? t.table.better : t.table.worse)(
+                    `${Math.abs(row.comparison.improvement).toFixed(1)}%`
+                  )
+                }}
+                <span class="nano-ci">
+                  95% CI [{{ fmt(row.comparison.low, 1) }}%, {{ fmt(row.comparison.high, 1) }}%],
+                  {{ t.table.wins(String(row.comparison.wins), String(row.comparison.n)) }}
+                </span>
               </template>
             </td>
           </tr>
@@ -95,7 +173,48 @@ const fmt = (v?: number | null, digits = 4) =>
       </table>
     </div>
 
+    <div v-if="table.secondary.length" class="nano-table-scroll nano-secondary">
+      <table>
+        <caption class="nano-table-caption">{{ t.table.secondaryCaption }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t.table.strategy }}</th>
+            <th v-for="metric in table.secondary" :key="metric.key" scope="col">
+              {{ metric.name }} ↓
+              <span class="nano-scope" v-if="metric.scope">{{ metric.scope }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(row, index) in table.rows"
+            :key="row.key"
+            :data-nano="row.key === 'nano'"
+            :data-reference="row.isReference"
+          >
+            <th scope="row">{{ row.label }}</th>
+            <td v-for="metric in table.secondary" :key="metric.key" class="num">
+              {{ fmt(metric.cells[index].mean) }}
+              <span
+                v-if="metric.cells[index].separates === false"
+                class="nano-inconclusive"
+                :title="t.table.notSeparated"
+                >*</span
+              >
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="nano-note">{{ t.table.secondaryNote }}</p>
+
+    <p v-if="table.datasetNote" class="nano-standin">
+      <span class="nano-tag" data-kind="conceptual">{{ t.table.standIn }}</span>
+      {{ table.datasetNote }}
+    </p>
+
     <ul class="nano-table-meta">
+      <li v-if="table.dataset">{{ t.table.metaDataset }}: <code>{{ table.dataset }}</code></li>
       <li>{{ t.table.metaInitial }}: <code>{{ table.initial ?? '—' }}</code></li>
       <li>{{ t.table.metaBudget }}: <code>{{ table.budget ?? '—' }}</code></li>
       <li v-if="table.prior">
@@ -127,6 +246,54 @@ const fmt = (v?: number | null, digits = 4) =>
 table {
   width: 100%;
   border-collapse: collapse;
+}
+
+.nano-ci {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--nano-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.nano-inconclusive {
+  color: var(--nano-gap);
+  font-weight: 600;
+}
+
+.nano-ref-tag {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--vp-c-bg-soft);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--nano-text-dim);
+  vertical-align: middle;
+}
+
+tbody tr[data-reference='true'] {
+  color: var(--nano-text-dim);
+}
+
+.nano-secondary {
+  margin-top: 1.75rem;
+}
+
+.nano-scope {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--nano-text-dim);
+}
+
+.nano-standin {
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--nano-gap);
+  background: var(--vp-c-bg-soft);
+  font-size: 0.85rem;
+  line-height: 1.55;
 }
 
 .nano-table-caption {

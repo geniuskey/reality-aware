@@ -5,14 +5,11 @@ description: The modules NANO is built from - observation tool, reality model, a
 
 # System Design
 
-::: danger This describes a target design, not shipped code
-There is **no Python package in this repository yet**. The module names, paths and signatures below
-are the intended structure. They are written down so the first implementation has a contract to meet
-and so this page can be corrected against reality afterwards rather than the other way around.
-
-When the code lands, every row in the table below must either point at a file that exists or be
-deleted. A diagram of an ideal architecture presented as an implemented one is exactly the
-misrepresentation this project argues against.
+::: tip Every row below points at a file that exists
+The Python package is in `nano/`. This page was written before the code and has been corrected
+against it: each module link resolves, and the boundaries described here are the ones
+`tests/` enforces — including a leakage test that flips hidden reality at every unmeasured die and
+requires the agent's trajectory to come out identical.
 :::
 
 ## Data flow
@@ -40,14 +37,20 @@ the agent never sees. Any shortcut across that boundary invalidates every number
 
 | Module | Responsibility | Input | Output |
 | --- | --- | --- | --- |
-| `nano.data` | Load WM-811K, filter and index the evaluation subset, expose the in-wafer die mask | Dataset path, seed | Wafer records: reality field, die mask, pattern label |
-| `nano.prior` | Generate the deliberately biased simulation prior from a reality field | Reality field, bias parameters | Prior field defined on every in-wafer die |
-| `nano.tools.observe` | The only channel to reality. Reveals one die's value and spends one unit of budget | Die index | Measured value, updated observation state |
-| `nano.model` | Reconcile prior with observations; produce prediction, uncertainty and reality-gap maps | Prior, observed mask, observed values | `prediction`, `uncertainty`, `reality_gap` |
-| `nano.policy` | Score unmeasured dies and select the next measurement | Model outputs, observed mask | `next_index`, `next_score`, per-term breakdown |
-| `nano.agent` | Run the Observe → Estimate → Select → Measure loop until the budget is exhausted | Wafer record, budget, seed | Decision trace, per-step metrics |
-| `nano.baselines` | Random and Grid selection rules behind the same policy interface | Model outputs, observed mask | `next_index` |
-| `nano.evaluate` | Score predictions against hidden ground truth and aggregate over wafers and seeds | Predictions, reality fields | `results/benchmark_summary.json` |
+| [`nano/data.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/data.py) | Load WM-811K, filter and index the evaluation subset, expose the in-wafer die mask | Dataset path, seed | Wafer records: reality field, die mask, pattern label |
+| [`nano/prior.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/prior.py) | Generate the deliberately biased simulation prior from a reality field | Reality field, bias parameters | Prior field defined on every in-wafer die |
+| [`nano/tools/observe.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/tools/observe.py) | The only channel to reality. Reveals one die's value and spends one unit of budget | Die index | Measured value, updated observation state |
+| [`nano/model.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/model.py) | Reconcile prior with observations; produce prediction, uncertainty, reality-gap and expected-disagreement maps | Prior, observed mask, observed values | `prediction`, `uncertainty`, `reality_gap`, `expected_disagreement` |
+| [`nano/policy.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/policy.py) | Score unmeasured dies and select the next measurement | Model outputs, observed mask | `next_index`, `next_score`, per-term breakdown |
+| [`nano/agent.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/agent.py) | Run the Observe → Estimate → Select → Measure loop until the budget is exhausted | Wafer record, budget, seed | Decision trace, per-step maps |
+| [`nano/baselines.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/baselines.py) | Random and Grid selection rules behind the same policy interface | Model outputs, observed mask | `next_index` |
+| [`nano/evaluate.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/evaluate.py) | Score predictions against hidden ground truth and aggregate over wafers and seeds | Predictions, reality fields | `results/benchmark_summary.json` |
+| [`nano/figures.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/figures.py) | Draw every published figure from a run, never from an illustration | Summary or episode | `results/*.svg`, `results/*.webp`, `results/demo.gif` |
+| [`nano/cli.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/cli.py) | Shared argument parsing; re-run one episode exactly as the benchmark ran it | Command-line arguments | Wafer records, episode bundle |
+
+Entry points: `python -m nano.benchmark` (all arms, writes the results file), `python -m nano.demo`
+(one narrated episode plus its figures) and `python -m nano.subset` (derive the versioned evaluation
+index from a local WM-811K).
 
 ## Boundaries that matter
 
@@ -61,7 +64,7 @@ which is what makes the comparison mean anything.
 **Evaluation is downstream of everything.** `nano.evaluate` is the only module that touches full
 reality fields, and it never returns anything to the agent.
 
-**One results file.** `nano.evaluate` writes `results/benchmark_summary.json`; the site reads it.
+**One results file.** `nano/evaluate.py` writes `results/benchmark_summary.json`; the site reads it.
 Charts, tables and headline numbers on this site all derive from that file, so a number cannot be
 updated in one place and stale in another. Schema is documented on the
 [benchmark page](./benchmark).
@@ -78,6 +81,7 @@ and no analytics.
 | Asset loader | `docs/.vitepress/data/assets.data.mts` | Lists `docs/public/results/` so missing figures degrade to a pending state |
 | Components | `docs/.vitepress/theme/components/` | `AgentLoop`, `WaferComparison`, `BenchmarkChart`, `BenchmarkTable`, `EvidenceStrip`, `MetricCard`, `ResultAsset` |
 | Asset sync | `scripts/sync-doc-assets.mjs` | Copies published figures from `results/` into `docs/public/results/` |
+| Figure scripts | `scripts/plot_*.py`, `scripts/record_demo.py` | Regenerate one published figure at a time from a run |
 | Deployment | `.github/workflows/deploy-docs.yml` | Builds on push to `main` and publishes to GitHub Pages |
 
 Components render at build time, so the pages carry their content as static HTML. With JavaScript

@@ -9,9 +9,14 @@ This page is static by design. GitHub Pages serves files, not Python, so the dem
 recording of a real run rather than a live one. The interactive version runs locally — see
 [Reproduce](./reproducibility).
 
-::: warning Implementation status
-The demo recording has **not been generated yet**. Each block below states which artifact it is
-waiting for. Nothing is illustrated with a stand-in that could be mistaken for a real run.
+::: warning No published recording yet
+The demo is implemented — `python -m nano.demo --wafer 0 --seed 0` prints the decision trace and
+writes every figure below — but no recording from a WM-811K run is published here. Each block states
+which artifact it is waiting for, and nothing is illustrated with a stand-in that could be mistaken
+for a real run.
+
+Run it locally and the figures appear; `npm run sync:assets` publishes them to a local build of this
+site.
 :::
 
 ## The schematic version
@@ -50,8 +55,14 @@ that structure is the agent's own map of its ignorance.
 
 The selection is the part worth scrutinising. A die is chosen because it scores highest on the
 acquisition function, and the score decomposes into terms that can be read separately: how unknown
-the die is, how much the prior and the evidence disagree there, and how far it is from anything
+the die is, how much the prior is expected to be wrong there, and how far it is from anything
 already sampled. A choice that cannot be explained by those three numbers is a bug, not a decision.
+
+The command prints the same decomposition as text, one line per measurement:
+
+```text
+m= 22  die   472  score 0.2551  [uncertainty=0.797 disagreement=0.572 novelty=0.559]  measured 0
+```
 
 <ResultAsset
   file="demo_selection.webp"

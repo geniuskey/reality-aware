@@ -11,7 +11,8 @@ description: 클론, 설치, 문서 빌드, 그리고 - 에이전트가 구현�
 | 대상 | 상태 |
 | --- | --- |
 | 문서 사이트 | **검증됨.** 아래 명령들은 이 저장소에서 실제로 실행되었다. |
-| 에이전트, 데이터셋, 벤치마크 | **아직 구현되지 않음.** 아래 명령들은 의도된 인터페이스일 뿐, 오늘 실행할 수 있는 것이 아니다. |
+| 에이전트, 벤치마크, 테스트 | **검증됨.** 아래 명령들은 이 저장소에서 생성된 대체 웨이퍼로 실제 실행되었다. |
+| WM-811K에 대한 벤치마크 실행 | **여기에 게시되지 않음.** 데이터셋은 커밋되어 있지 않다. 내려받으면 같은 명령이 결과 파일을 만든다. |
 
 ## 문서 사이트
 
@@ -53,24 +54,36 @@ npm run sync:assets
 
 ## 에이전트와 벤치마크
 
-::: danger 아직 실행할 수 없음
-이 저장소에는 Python 패키지도, 엔트리 포인트도, 테스트 스위트도 커밋되어 있지 않다. 이 절의 모든 내용은
-구현이 노출할 것으로 예상되는 인터페이스다. 이것들을 동작하는 명령으로 취급하지 말고, 이 명령들의 초기
-버전이 만들어낸 숫자는 `results/benchmark_summary.json`에 들어가기 전까지 게시된 결과로 취급하지
-마세요.
-:::
-
-의도된 인터페이스:
+Python 3.11에서 검증되었다.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
+pytest                                        # 테스트 스위트, 데이터셋 불필요
 python -m nano.demo --wafer 0 --seed 0        # 단일 에피소드, 데모 그림을 기록
 python -m nano.benchmark --seeds 0 1 2 3 4    # 전체 비교, 결과 파일을 기록
-pytest                                        # 테스트 스위트
 ```
+
+`pip install -e .`만 실행하면 numpy만 설치되며, 루프와 벤치마크를 돌리기에는 그것으로 충분하다.
+`figures` 추가 항목은 matplotlib과 pillow를, `data`는 `LSWMD.pkl`을 읽기 위한 pandas를, `dev`는
+그 둘에 pytest까지 더한다.
+
+### 데이터셋 없이 실행하기
+
+모든 명령은 `--synthetic`을 받는다. WM-811K 대신 `nano.data.synthetic_wafers`가 생성한 웨이퍼 맵을
+사용한다.
+
+```bash
+python -m nano.benchmark --synthetic --wafers 12 --seeds 0 1 2 3 4
+```
+
+아무것도 내려받지 않고 파이프라인 전체 — 루프, 베이스라인, 채점, 그림 — 를 실행한다. 이것은
+데이터셋이 **아니다**. 실행은 경고를 출력하고, 결과 파일은 `dataset.name`을 `synthetic-wafers`로
+기록하며 주석을 남기고, [벤치마크 페이지](./benchmark)의 표는 웨이퍼 출처를 함께 출력한다. 따라서
+대체 웨이퍼의 숫자를 데이터셋 숫자로 읽을 수 없다. 대체 웨이퍼 실행 결과는 이 저장소에 커밋하지
+않는다.
 
 ### 데이터셋 구하기
 
@@ -109,10 +122,13 @@ python -m nano.benchmark --seeds 7             # 빠른 확인을 위한 단일 
 
 ## 직접 만들지 않은 결과를 검증하기
 
-1. `results/benchmark_summary.json`에서 `experiment.seeds`, `experiment.initial_measurements`,
-   `experiment.measurement_budget`를 읽는다.
-2. 정확히 그 값들로 벤치마크를 다시 실행한다.
-3. `strategies.*.final.mean`을 자신의 실행 결과와 비교한다.
+1. `results/benchmark_summary.json`에서 `dataset.name`, `experiment.seeds`,
+   `experiment.initial_measurements`, `experiment.measurement_budget`를 읽는다. `dataset.note`가
+   있다면 그 실행은 WM-811K를 쓰지 않은 것이다.
+2. `dataset.subset_file`이 가리키는 서브셋 인덱스에 대해, 정확히 그 값들로 벤치마크를 다시
+   실행한다.
+3. `strategies.*.final.mean`을 자신의 실행 결과와 비교한다. 그 숫자를 만들어 낸 파라미터는
+   `experiment.prior_bias`와 `experiment.model`에 기록되어 있다.
 
 숫자가 재현되지 않는다면 결과 파일이 틀린 것이고, 이 사이트도 함께 틀린 것이다. 이 사이트는 그 파일을
 읽는 일밖에 하지 않기 때문이다.

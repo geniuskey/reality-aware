@@ -103,6 +103,15 @@ const en = {
     // callable rather than a prefix plus a number.
     better: (pct: string) => `NANO better by ${pct}`,
     worse: (pct: string) => `NANO worse by ${pct}`,
+    metaDataset: 'Wafer source',
+    standIn: 'Stand-in wafers',
+    noBudget: 'spends no budget',
+    notSeparated: 'not separated from NANO',
+    wins: (wins: string, n: string) => `NANO better in ${wins}/${n} episodes`,
+    secondaryCaption:
+      'The same run scored on every other metric. A number marked * is one where the paired interval spans zero, so the arms are not separated on that metric.',
+    secondaryNote:
+      'Metrics disagree here by construction. Plain MAE over every in-wafer die is led by the majority class when failures are rare, which is why the primary metric weights the two classes equally and why both are printed.',
     metaInitial: 'Initial measurements',
     metaBudget: 'Additional measurement budget',
     metaPrior: 'Simulation prior error before any correction',
@@ -115,6 +124,24 @@ const en = {
     emptyTailEnd: 'and this table fills itself in.'
   },
 
+  ablation: {
+    caption: (metric: string) =>
+      `Final ${metric} for the acquisition rule with terms dropped. Every arm ran the same loop, the same budget and the same initial observations; only the terms of the product differ.`,
+    rule: 'Acquisition rule',
+    std: '± std',
+    verdict: 'Against the published rule',
+    published: 'published rule',
+    reference: 'reference',
+    notSeparated: 'not separated',
+    better: (pct: string) => `beats the published rule by ${pct}`,
+    worse: (pct: string) => `loses to the published rule by ${pct}`,
+    wins: (wins: string, n: string) =>
+      `this rule better in ${wins}/${n} episodes`,
+    note: 'A row that beats the published rule is a finding, not a footnote: the term it drops is costing accuracy on this wafer source rather than buying it.',
+    emptyLead: 'No ablation in this results file. Run',
+    emptyTail: ' and this table fills itself in.'
+  },
+
   evidence: {
     nano: 'NANO',
     nanoHint: (metric: string) => `Final ${metric} after the full budget`,
@@ -123,6 +150,11 @@ const en = {
     grid: 'Grid baseline',
     gridHint: 'Spatially uniform selection',
     priorDrop: 'Prior error removed',
+    separated: (arms: string) =>
+      `Separated from ${arms} at 95% confidence, over the paired episodes.`,
+    notSeparated: (arms: string) =>
+      `Not separated from ${arms}: the paired interval spans zero, so the difference in means is not supported by this evidence.`,
+    noComparison: 'No paired comparison is recorded in this results file.',
     priorDropHint: 'Biased simulation prior vs corrected estimate',
     footnote: (wafers: string, seeds: string, budget: string, metric: string) =>
       `${wafers} wafers × ${seeds} seeds · measurement budget ${budget} · ${metric} ↓ lower is better · generated from`,
@@ -236,6 +268,15 @@ const ko: Strings = {
     reference: '기준',
     better: (pct: string) => `NANO가 ${pct} 더 좋음`,
     worse: (pct: string) => `NANO가 ${pct} 더 나쁨`,
+    metaDataset: '웨이퍼 출처',
+    standIn: '대체 웨이퍼',
+    noBudget: '예산을 쓰지 않음',
+    notSeparated: 'NANO와 구분되지 않음',
+    wins: (wins: string, n: string) => `${n}판 중 ${wins}판에서 NANO 우세`,
+    secondaryCaption:
+      '같은 실행을 나머지 모든 지표로 채점한 결과. *가 붙은 값은 페어링 신뢰구간이 0을 포함하는 경우로, 그 지표에서는 두 조건이 구분되지 않는다.',
+    secondaryNote:
+      '지표들이 서로 어긋나는 것은 구조상 당연하다. 웨이퍼 내부 전체 다이에 대한 단순 MAE는 불량이 드물 때 다수 클래스가 지배한다. 그래서 주 지표는 두 클래스에 같은 가중치를 주며, 두 값을 모두 출력한다.',
     metaInitial: '초기 측정 수',
     metaBudget: '추가 측정 예산',
     metaPrior: '보정 전 시뮬레이션 prior 오차',
@@ -248,6 +289,23 @@ const ko: Strings = {
     emptyTailEnd: '파일이 생성되고 이 표가 스스로 채워집니다.'
   },
 
+  ablation: {
+    caption: (metric: string) =>
+      `획득 규칙에서 항을 하나씩 뺐을 때의 최종 ${metric}. 모든 arm은 같은 루프, 같은 예산, 같은 초기 관측으로 실행되었고, 곱에 들어가는 항만 다르다.`,
+    rule: '획득 규칙',
+    std: '± 표준편차',
+    verdict: '게시된 규칙과 비교',
+    published: '게시된 규칙',
+    reference: '기준',
+    notSeparated: '구분되지 않음',
+    better: (pct: string) => `게시된 규칙보다 ${pct} 더 좋음`,
+    worse: (pct: string) => `게시된 규칙보다 ${pct} 더 나쁨`,
+    wins: (wins: string, n: string) => `${n}판 중 ${wins}판에서 이 규칙이 우세`,
+    note: '게시된 규칙을 이기는 행은 각주가 아니라 결과다. 그 행이 뺀 항은 이 웨이퍼 출처에서 정확도를 사는 것이 아니라 깎고 있다는 뜻이다.',
+    emptyLead: '이 결과 파일에는 ablation이 없습니다.',
+    emptyTail: ' 를 실행하면 이 표가 스스로 채워집니다.'
+  },
+
   evidence: {
     nano: 'NANO',
     nanoHint: (metric: string) => `전체 예산 소모 후 최종 ${metric}`,
@@ -256,6 +314,10 @@ const ko: Strings = {
     grid: 'Grid 베이스라인',
     gridHint: '공간적으로 균일한 선택',
     priorDrop: '제거된 prior 오차',
+    separated: (arms: string) => `95% 신뢰수준에서 ${arms}와 구분되었다(페어링 에피소드 기준).`,
+    notSeparated: (arms: string) =>
+      `${arms}와는 구분되지 않았다. 페어링 신뢰구간이 0을 포함하므로, 평균 차이는 이 근거로 뒷받침되지 않는다.`,
+    noComparison: '이 결과 파일에는 페어링 비교가 기록되어 있지 않다.',
     priorDropHint: '편향된 시뮬레이션 prior 대비 보정된 추정',
     footnote: (wafers: string, seeds: string, budget: string, metric: string) =>
       `웨이퍼 ${wafers}개 × 시드 ${seeds}개 · 측정 예산 ${budget} · ${metric} ↓ 낮을수록 좋음 · 생성 출처:`,
