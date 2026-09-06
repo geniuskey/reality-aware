@@ -5,14 +5,11 @@ description: NANO를 구성하는 모듈들 - 관측 툴, 실제 모델, 획득 
 
 # 시스템 설계
 
-::: danger 이 문서는 목표 설계를 설명하며, 실제 구현된 코드가 아니다
-**이 저장소에는 아직 Python 패키지가 없다**. 아래의 모듈 이름, 경로, 시그니처는 의도된 구조다.
-첫 구현이 충족해야 할 계약을 제시하기 위해, 그리고 나중에 이 페이지가 실제에 맞춰 수정되도록
-— 그 반대가 되지 않도록 — 적어 둔 것이다.
-
-코드가 들어오면, 아래 표의 모든 행은 실제로 존재하는 파일을 가리키거나 삭제되어야 한다.
-이상적인 아키텍처 도식을 구현된 것처럼 제시하는 것, 그것이 바로 이 프로젝트가 반대하는
-바로 그 허위 표현이다.
+::: tip 아래 표의 모든 행은 실제로 존재하는 파일을 가리킨다
+Python 패키지는 `nano/`에 있다. 이 페이지는 코드보다 먼저 작성되었고, 이후 코드에 맞춰
+수정되었다. 각 모듈 링크는 실제 파일로 연결되며, 여기서 설명하는 경계는 `tests/`가 강제하는
+경계다 — 측정되지 않은 모든 다이에서 숨겨진 실제를 뒤집은 뒤 에이전트의 궤적이 동일하게 나오는지
+검증하는 누수 테스트도 포함된다.
 :::
 
 ## 데이터 흐름
@@ -39,14 +36,20 @@ flowchart TD
 
 | 모듈 | 책임 | 입력 | 출력 |
 | --- | --- | --- | --- |
-| `nano.data` | WM-811K를 로드하고, 평가 서브셋을 필터링·인덱싱하며, 웨이퍼 내부 다이 마스크를 노출 | 데이터셋 경로, 시드 | 웨이퍼 레코드: 실제 필드, 다이 마스크, 패턴 레이블 |
-| `nano.prior` | 실제 필드로부터 의도적으로 편향된 시뮬레이션 prior를 생성 | 실제 필드, 편향 파라미터 | 웨이퍼 내부 모든 다이에 정의된 prior 필드 |
-| `nano.tools.observe` | 실제로 통하는 유일한 채널. 다이 하나의 값을 드러내고 예산 한 단위를 소모 | 다이 인덱스 | 측정값, 갱신된 관측 상태 |
-| `nano.model` | prior와 관측을 조화시키고 예측, 불확실성, reality-gap 맵을 생성 | prior, 관측 마스크, 관측값 | `prediction`, `uncertainty`, `reality_gap` |
-| `nano.policy` | 측정되지 않은 다이에 점수를 매기고 다음 측정 지점을 선택 | 모델 출력, 관측 마스크 | `next_index`, `next_score`, 항별 분해 |
-| `nano.agent` | 예산이 소진될 때까지 관측 → 추정 → 선택 → 측정 루프를 실행 | 웨이퍼 레코드, 예산, 시드 | 결정 추적, 단계별 지표 |
-| `nano.baselines` | 동일한 정책 인터페이스 뒤에 놓인 Random과 Grid 선택 규칙 | 모델 출력, 관측 마스크 | `next_index` |
-| `nano.evaluate` | 숨겨진 ground truth에 대비해 예측을 채점하고 웨이퍼와 시드에 걸쳐 집계 | 예측, 실제 필드 | `results/benchmark_summary.json` |
+| [`nano/data.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/data.py) | WM-811K를 로드하고, 평가 서브셋을 필터링·인덱싱하며, 웨이퍼 내부 다이 마스크를 노출 | 데이터셋 경로, 시드 | 웨이퍼 레코드: 실제 필드, 다이 마스크, 패턴 레이블 |
+| [`nano/prior.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/prior.py) | 실제 필드로부터 의도적으로 편향된 시뮬레이션 prior를 생성 | 실제 필드, 편향 파라미터 | 웨이퍼 내부 모든 다이에 정의된 prior 필드 |
+| [`nano/tools/observe.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/tools/observe.py) | 실제로 통하는 유일한 채널. 다이 하나의 값을 드러내고 예산 한 단위를 소모 | 다이 인덱스 | 측정값, 갱신된 관측 상태 |
+| [`nano/model.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/model.py) | prior와 관측을 조화시키고 예측, 불확실성, reality-gap, 예상 불일치 맵을 생성 | prior, 관측 마스크, 관측값 | `prediction`, `uncertainty`, `reality_gap`, `expected_disagreement` |
+| [`nano/policy.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/policy.py) | 측정되지 않은 다이에 점수를 매기고 다음 측정을 선택 | 모델 출력, 관측 마스크 | `next_index`, `next_score`, 항별 분해 |
+| [`nano/agent.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/agent.py) | 예산이 소진될 때까지 관측 → 추정 → 선택 → 측정 루프를 실행 | 웨이퍼 레코드, 예산, 시드 | 결정 추적, 단계별 맵 |
+| [`nano/baselines.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/baselines.py) | 동일한 정책 인터페이스 뒤에 있는 Random과 Grid 선택 규칙 | 모델 출력, 관측 마스크 | `next_index` |
+| [`nano/evaluate.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/evaluate.py) | 숨겨진 ground truth에 대해 예측을 채점하고 웨이퍼와 시드에 대해 집계 | 예측, 실제 필드 | `results/benchmark_summary.json` |
+| [`nano/figures.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/figures.py) | 게시되는 모든 그림을 예시가 아니라 실제 실행에서 그림 | 요약 파일 또는 에피소드 | `results/*.svg`, `results/*.webp`, `results/demo.gif` |
+| [`nano/cli.py`](https://github.com/geniuskey/reality-aware/blob/main/nano/cli.py) | 공통 인자 파싱, 그리고 벤치마크가 실행한 것과 똑같이 에피소드 하나를 재실행 | 명령줄 인자 | 웨이퍼 레코드, 에피소드 번들 |
+
+진입점: `python -m nano.benchmark`(모든 조건 실행, 결과 파일 작성), `python -m nano.demo`(설명이
+붙은 에피소드 하나와 그 그림들), `python -m nano.subset`(로컬 WM-811K에서 버전 관리되는 평가
+인덱스를 생성).
 
 ## 중요한 경계들
 

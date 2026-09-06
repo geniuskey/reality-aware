@@ -9,10 +9,15 @@ Every figure and every number on this page is rendered from one file,
 `results/benchmark_summary.json`. Nothing here is typed into Markdown by hand, so the table, the
 chart and the home page cannot disagree with each other.
 
-::: warning Implementation status
-The benchmark has **not been run in this repository yet**, so `results/benchmark_summary.json` does
-not exist and every result block below reports that honestly. It will populate itself the moment the
-file appears. See [Reproduce](./reproducibility).
+::: warning No published run yet
+The harness is implemented (`python -m nano.benchmark`), but no run against WM-811K is published
+here, so `results/benchmark_summary.json` does not exist and every result block below reports that
+honestly. It populates itself the moment the file appears.
+
+A results file is committed only for a run against the dataset. A run on generated stand-in wafers
+(`--synthetic`) produces the same file locally and is labelled as such — the table prints the wafer
+source — but stand-in numbers are not published as dataset results. See
+[Reproduce](./reproducibility).
 :::
 
 ## What is being compared
@@ -25,6 +30,11 @@ same additional measurement budget. The **only** difference is which die each on
 | **Random** | Uniformly sample an unmeasured die |
 | **Grid** | Pick the unmeasured die closest to the next point on a spatially uniform lattice |
 | **NANO** | Pick the unmeasured die with the highest acquisition score |
+
+The rule each arm ran is recorded in the results file, and all three are driven by the same loop in
+`nano/agent.py` through the same `select(estimate, observed_mask, coords, rng)` signature. Grid sizes
+its lattice to the budget and consumes it in a fixed order; Random draws uniformly from the
+unmeasured dies with the episode's seeded generator.
 
 A fair comparison here is a matter of protocol, not of intent: if NANO started from a different
 initial mask or spent a larger budget, any improvement would be uninterpretable.
@@ -91,7 +101,10 @@ file and not from expectation:
 - wafers where the biased prior was accidentally close to reality, so correction had nothing to do,
 - variance across seeds large enough to make the mean uninformative.
 
-If NANO loses on a pattern class, that belongs here in full, not in a footnote.
+The run records what this section needs: `strategies.*.by_pattern` holds the per-pattern mean and
+spread for every arm, `episodes` holds every individual `(wafer, seed)` result, and the paired
+figure above is drawn from them. If NANO loses on a pattern class, that belongs here in full, not in
+a footnote.
 :::
 
 ## Results file schema
@@ -153,6 +166,13 @@ fails loudly on a malformed file rather than rendering something plausible.
 | `strategies.*.curve` | for the chart | Omit it and the chart shows its pending state; the table still renders |
 | `metric.direction` | recommended | Controls the `↓` / `↑` marker printed next to every metric |
 | `prior.initial_error` | recommended | Lets the site report how much prior error the correction removed |
+| `dataset.name` | recommended | Printed under the table as the wafer source |
+| `dataset.note` | when not WM-811K | A stand-in run writes a note here and the table prints it prominently |
+
+The file the harness writes carries more than the minimum: `experiment.acquisition_rule` and
+`experiment.prior_bias` and `experiment.model` record the rule and the parameters that produced the
+numbers, `strategies.*.by_pattern` breaks results down by failure pattern, and `episodes` lists every
+`(wafer, seed)` pair so per-episode wins and losses stay recoverable from the published file.
 
 Figures referenced by [ResultAsset](./architecture) are read from `docs/public/results/`. The sync
 script copies them there from the canonical `results/` directory — see

@@ -9,13 +9,57 @@ Docs site: <https://geniuskey.github.io/reality-aware/> (Korean: <https://genius
 
 ## Status
 
-This repository currently contains the **documentation site only**. The agent, the WM-811K subset
-builder and the benchmark harness are not implemented yet, so the site ships **no benchmark
-numbers**: every metric, table and chart reads from `results/benchmark_summary.json` and shows
-`Run benchmark to generate results` until that file exists.
+The agent, the WM-811K subset builder, the benchmark harness and the documentation site are all in
+this repository. What is **not** here is a published benchmark run: WM-811K is not committed, so
+`results/benchmark_summary.json` does not exist and every metric, table and chart on the site shows
+`Run benchmark to generate results` until it does.
+
+The pipeline runs without the dataset, on clearly labelled stand-in wafers (`--synthetic`), which is
+how the code is tested. Those numbers are never committed here and the site prints the wafer source
+under every results table, so a stand-in number cannot be read as a dataset number.
 
 See [Honest Scope](https://geniuskey.github.io/reality-aware/limitations) for what is claimed and
 what is not.
+
+## Run the agent
+
+Requires Python 3.10 or newer.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+
+pytest                                                    # 75 tests, no dataset needed
+python -m nano.demo --synthetic --wafer 0 --seed 0         # one narrated episode + figures
+python -m nano.benchmark --synthetic --seeds 0 1 2 3 4     # all three arms + results file
+```
+
+With a local copy of WM-811K at `data/raw/LSWMD.pkl`, build the versioned evaluation index once and
+drop the `--synthetic` flag:
+
+```bash
+python -m nano.subset --wafers 12 --seed 0    # writes data/subsets/wm811k_eval.json
+python -m nano.benchmark --seeds 0 1 2 3 4    # writes results/benchmark_summary.json
+npm run sync:assets                           # publish the figures to the site
+```
+
+`pip install -e .` installs numpy alone, which is enough for the loop and the benchmark. The extras
+add matplotlib and pillow (`figures`), pandas for reading `LSWMD.pkl` (`data`), and pytest (`dev`).
+
+### What the loop is
+
+`Observe → Estimate → Select → Measure`, once per unit of measurement budget. Reality reaches the
+agent only through `nano/tools/observe.py`, which holds the budget itself, so no strategy can take an
+extra look. `nano/evaluate.py` is the only module that reads full ground-truth fields, and it never
+returns anything to the agent. The selection rule is
+
+```text
+acquisition(i) = uncertainty(i) × simulation_disagreement(i) × spatial_novelty(i)
+```
+
+and it is recorded in every results file, so the documented rule and the executed rule cannot drift
+apart.
 
 ## Run the docs locally
 
@@ -54,15 +98,32 @@ published.
 
 | Path | Contents |
 | --- | --- |
+| `nano/` | The Python package: data, prior, observation tool, model, policy, baselines, agent, evaluation, figures |
+| `tests/` | Test suite, including a leakage test that flips hidden reality at unmeasured dies and requires an identical trajectory |
+| `data/subsets/` | Versioned evaluation index derived from WM-811K (the dataset itself is never committed) |
 | `docs/` | English Markdown pages, VitePress config, theme and Vue components |
 | `docs/ko/` | Korean translation of every page |
 | `docs/public/` | Logo, favicon, social card, published result figures |
 | `results/` | Canonical benchmark output — `benchmark_summary.json` and generated figures |
-| `scripts/` | `sync-doc-assets.mjs`, social-card source |
+| `scripts/` | Figure scripts (`plot_*.py`, `record_demo.py`), `sync-doc-assets.mjs`, social-card source |
 | `.github/workflows/` | Pages deployment |
 
 `results/` is the single source of truth for numbers. Nothing is hand-typed into the Markdown, so a
 figure cannot go stale in one place and be correct in another.
+
+## Layout of the package
+
+| Module | Responsibility |
+| --- | --- |
+| `nano/data.py` | Load WM-811K, filter and index the evaluation subset, generate labelled stand-in wafers |
+| `nano/prior.py` | The deliberately biased simulation prior: smoothing, radial bias, offset and gain |
+| `nano/tools/observe.py` | The only channel to reality; holds and spends the measurement budget |
+| `nano/model.py` | Prediction, uncertainty, reality gap and expected disagreement from prior + observations |
+| `nano/policy.py` | The three-term acquisition rule, with the per-term breakdown for every decision |
+| `nano/baselines.py` | Random and Grid, behind the same interface |
+| `nano/agent.py` | The loop, and the initial centre-biased observation mask |
+| `nano/evaluate.py` | Scoring against hidden ground truth; writes `results/benchmark_summary.json` |
+| `nano/figures.py` | Every published figure, drawn from a real run |
 
 ## Data
 

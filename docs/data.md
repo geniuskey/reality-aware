@@ -19,10 +19,16 @@ Manufacturing, 2015.
 | Terms of use | Set by the distributor, not by this project. Check the licence on the page you download from before redistributing. |
 | Included in this repository | **No raw WM-811K data is committed here.** The dataset is downloaded locally; only a derived subset index is versioned. |
 
-::: warning Implementation status
-The subset builder and the benchmark harness are **not in this repository yet**. This page specifies
-the design they must implement. Any field written as `recorded at run time` is deliberately empty:
-it will be filled from the artifacts the run produces, not typed in by hand.
+::: tip Implementation status
+The subset builder is `python -m nano.subset` and the harness is `python -m nano.benchmark`. Any
+field below written as `recorded at run time` is deliberately empty on this page: it is filled from
+the artifacts a run produces, not typed in by hand, and this repository publishes no run against
+WM-811K yet.
+
+Without a local copy of the dataset the pipeline still runs, on generated stand-in wafers
+(`--synthetic`). Those are **not** WM-811K: the results file records `dataset.name` as
+`synthetic-wafers` with a note, every command prints a warning, and the results table on this site
+prints the wafer source. See [Honest Scope](./limitations).
 :::
 
 ## Wafer map semantics
@@ -41,8 +47,10 @@ Reconstruction error is measured only over in-wafer positions.
 ## Preprocessing rules
 
 1. Drop wafers whose die grid is smaller than the minimum usable size, because a sparse budget is
-   meaningless on a handful of dies.
+   meaningless on a handful of dies (`--min-dies`, default 400).
 2. Keep only wafers with a labelled failure pattern, so results can be broken down by pattern type.
+   The evaluation set is then sampled round-robin across the surviving pattern classes, so no one
+   class dominates.
 3. Build the in-wafer mask from `value != 0` and treat it as known geometry — the agent is allowed to
    know which grid positions hold a die.
 4. Map `{1 → 0.0, 2 → 1.0}` to get the reality field.
@@ -73,20 +81,33 @@ flowchart TD
 
 <p class="nano-note">A WM-811K wafer map becomes the hidden reality field. From it, a biased prior generator produces the prior the agent sees everywhere, and an observation mask produces the few values it may read. Both feed the agent, which outputs prediction and uncertainty. Reality and prediction meet only inside the evaluation harness.</p>
 
+### Building the evaluation index
+
+```bash
+python -m nano.subset --raw data/raw/LSWMD.pkl --wafers 12 --seed 0
+```
+
+This writes `data/subsets/wm811k_eval.json`: the wafer indices, their pattern labels, grid shapes and
+die counts, plus the filters and seed that selected them. The index is versioned; the dataset it was
+derived from is not. `python -m nano.benchmark` reconstructs the same evaluation set from the index
+plus a local `LSWMD.pkl`.
+
 ### Building the biased prior
 
 The prior must be *wrong in a structured way*, because that is how simulation is wrong. Random noise
 added to ground truth would be a much easier problem and would not test anything interesting. The
 prior is generated from the reality field by composing:
 
-- **Radial bias** — systematically under-predict failure towards the wafer edge, the classic
-  signature of a model calibrated on centre measurements.
-- **Spatial smoothing** — blur out fine structure, so local patterns present in reality are absent
-  from the prior.
+- **Spatial smoothing** — a mask-aware Gaussian blur (`smoothing_sigma`), so fine structure present
+  in reality is absent from the prior. Positions outside the wafer are excluded from the blur rather
+  than treated as zeros, which would drag the edge down for the wrong reason.
+- **Radial bias** — failure is scaled down by `1 − radial_strength × radius^radial_power`,
+  systematically under-predicting towards the wafer edge: the classic signature of a model
+  calibrated on centre measurements.
 - **Global offset and gain** — a calibration error applied to the whole wafer.
 
-The bias parameters are fixed per run, recorded in the results file, and identical across all
-strategy arms.
+The bias parameters live in `nano/prior.py` as `BiasParams`, are deterministic, are recorded in the
+results file under `experiment.prior_bias`, and are identical across all strategy arms.
 
 ### Drawing the initial observation mask
 

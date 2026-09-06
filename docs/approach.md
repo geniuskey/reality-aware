@@ -8,11 +8,14 @@ description: NANO observes sparse measurements, estimates reality and uncertaint
 NANO is a loop, not a model. The model produces maps; the loop spends a budget. This page states the
 contract of each step — inputs, outputs, and the rule that turns uncertainty into a decision.
 
-::: warning Implementation status
-The agent and benchmark code are **not in this repository yet**. This page states the intended
-contract so that the implementation and the documentation can be checked against each other. Where
-the shipped code ends up differing, this page is the thing that must change. No page on this site
-prints a benchmark number that has not been generated — see [Reproduce](./reproducibility).
+::: tip Implementation status
+The loop described here is implemented in `nano/`, and the contract below is enforced by the test
+suite. The estimator is `nano/model.py`, the acquisition rule is `nano/policy.py`, and the loop is
+`nano/agent.py`. Where code and page disagree, that is a bug in one of them — see
+[System Design](./architecture) for the file-by-file map.
+
+No page on this site prints a benchmark number that has not been generated. Running the benchmark
+against WM-811K is what fills them in — see [Reproduce](./reproducibility).
 :::
 
 ## The loop
@@ -50,11 +53,22 @@ The estimator has one job: reconcile a dense, biased prior with a sparse, truste
 measurements, and stay honest about how far the reconciliation reaches.
 
 1. **Start from the prior.** With zero measurements, the estimate *is* the simulation prior, and
-   uncertainty is high everywhere.
-2. **Correct locally.** Each measurement pulls the estimate towards ground truth in its
-   neighbourhood, with influence decaying over distance.
-3. **Report the reach.** Uncertainty grows with distance from the nearest measurement and with
-   disagreement between nearby measurements.
+   uncertainty is `1.0` everywhere.
+2. **Correct locally.** Each measurement contributes a residual, `measured value − prior`, spread by
+   a Gaussian kernel in die distance. The weighted mean of those residuals is added to the prior and
+   the result is clipped to `[0, 1]`; at a measured die the prediction is the measured value exactly.
+3. **Return to the prior where nothing was measured.** The weighted mean is shrunk by
+   `prior_weight`, which counts the prior as that many measurements' worth of evidence for "no
+   correction here". Without it the estimate would extrapolate a global offset into regions nothing
+   has been measured in.
+4. **Report the reach.** Uncertainty is `1 / (1 + total kernel weight)`, raised back towards `1` by
+   disagreement between the measurements that do reach a die. The scale is absolute — `1.0` means
+   nothing measured reaches here, `0.0` means measured — so two maps from one episode are
+   comparable, and "uncertainty fell" is a falsifiable claim rather than a rescaling artifact.
+
+The two hyper-parameters (`length_scale`, defaulting to a twelfth of the wafer span, and
+`prior_weight`) are fixed before the comparison, identical across every arm, and written into
+`results/benchmark_summary.json` under `experiment.model`.
 
 Ground truth for unmeasured dies is never read by the estimator. It exists only in the evaluation
 harness. <span class="nano-tag" data-kind="hidden">Hidden from agent</span>
@@ -70,8 +84,20 @@ acquisition(i) = uncertainty(i) × simulation_disagreement(i) × spatial_novelty
 | Term | Reads as | Why it belongs |
 | --- | --- | --- |
 | `uncertainty(i)` | "I do not know this die." | Spending budget where the estimate is already firm buys nothing. |
-| `simulation_disagreement(i)` | "The prior and the evidence disagree here." | This is where the Sim2Real gap actually lives. Uncertainty alone will happily sample empty agreement. |
+| `simulation_disagreement(i)` | "The prior is expected to be wrong here." | This is where the Sim2Real gap actually lives. Uncertainty alone will happily sample empty agreement. |
 | `spatial_novelty(i)` | "I have not looked in this region." | Prevents the loop from clustering measurements around one interesting spot. |
+
+Each term is min-max scaled to `[0, 1]` over the wafer and floored at `eps = 1e-3`, because a
+product is zero if any factor is zero and all three terms are legitimately zero somewhere on every
+wafer. The floor ranks a candidate last on a term instead of vetoing it outright.
+
+The disagreement term is **not** `|prediction − prior|`. That map necessarily decays to nothing
+beyond the reach of the measurements, so a rule built on it would call every unexplored region
+settled and never look there. The model emits a second map, `expected_disagreement`: the locally
+weighted *magnitude* of the residuals, shrunk towards the wafer-wide mean residual magnitude
+wherever local evidence is thin. It reads as "the prior is off by about this much here, and I have
+no evidence to the contrary". `reality_gap` remains an output, because the correction actually
+applied is what a reviewer needs to see.
 
 The next measurement is `argmax` over unmeasured dies:
 
@@ -80,10 +106,12 @@ next_index = argmax { acquisition(i) : observed_mask[i] == False }
 ```
 
 ::: tip Keep the formula and the code in sync
-If the implementation reduces to plain `argmax(uncertainty)`, this section must say
+If the implementation reduced to plain `argmax(uncertainty)`, this section would have to say
 `argmax(uncertainty)`. A three-term product in the documentation and a one-term rule in the code is
-the failure mode this project exists to argue against. The
-[benchmark page](./benchmark) records which rule produced the published numbers.
+the failure mode this project exists to argue against, so the rule that ran is written into every
+results file as `experiment.acquisition_rule`, `nano/policy.py` returns the per-term breakdown with
+every decision, and `tests/test_policy.py` asserts that the score of the selected die equals the
+product of the three terms in its own trace.
 :::
 
 ## Stopping and determinism
@@ -92,7 +120,8 @@ the failure mode this project exists to argue against. The
 convergence criterion, because a budget is the constraint that actually binds in a fab: tool time is
 allocated, not discovered.
 
-**Determinism.** Every stochastic choice is driven by an explicit seed:
+**Determinism.** Every stochastic choice is driven by an explicit seed. Seeds are combined with a
+stable hash of the wafer id and the strategy name, so a run reproduces across interpreter sessions:
 
 - which wafers enter the evaluation set,
 - how the initial sparse observation mask is drawn,
