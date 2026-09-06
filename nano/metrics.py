@@ -205,3 +205,81 @@ def paired_bootstrap(
         resamples=int(resamples),
         seed=int(seed),
     )
+
+
+def rank_correlation(a: Sequence[float], b: Sequence[float]) -> float:
+    """Spearman correlation, computed from ranks with numpy alone.
+
+    Ranking is the claim NANO actually makes about its uncertainty map — that a
+    die it calls more uncertain is a die it is more likely to be wrong about.
+    Correlation of ranks is the direct test of it, and it needs no assumption
+    about the shape of either distribution.
+    """
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    if a.shape != b.shape:
+        raise ValueError("rank correlation needs two equal-length sequences")
+    if a.size < 2:
+        return float("nan")
+    ranks = np.corrcoef(_ranks(a), _ranks(b))[0, 1]
+    return float(ranks)
+
+
+def _ranks(values: np.ndarray) -> np.ndarray:
+    """Average ranks, so ties do not distort the correlation."""
+    order = np.argsort(values, kind="stable")
+    ranks = np.empty(values.size, dtype=float)
+    ranks[order] = np.arange(values.size, dtype=float)
+
+    sorted_values = values[order]
+    start = 0
+    for stop in range(1, values.size + 1):
+        if stop == values.size or sorted_values[stop] != sorted_values[start]:
+            if stop - start > 1:
+                ranks[order[start:stop]] = ranks[order[start:stop]].mean()
+            start = stop
+    return ranks
+
+
+def reliability_bins(
+    uncertainty: Sequence[float],
+    absolute_error: Sequence[float],
+    *,
+    bins: int = 10,
+) -> list[dict]:
+    """Group dies by predicted uncertainty and report the error actually made.
+
+    This does not test calibration in the strict sense — no interval is claimed,
+    so none can be checked for coverage. It tests the weaker property the
+    acquisition rule relies on: that uncertainty *orders* the dies by how wrong
+    the estimate is there. A flat curve would mean the map is decorative.
+    """
+    uncertainty = np.asarray(uncertainty, dtype=float)
+    absolute_error = np.asarray(absolute_error, dtype=float)
+    if uncertainty.shape != absolute_error.shape:
+        raise ValueError("reliability needs one error per uncertainty value")
+    if uncertainty.size == 0:
+        return []
+
+    # Equal-count bins: equal-width ones would leave most bins nearly empty,
+    # because uncertainty piles up once a budget has been spent.
+    edges = np.quantile(uncertainty, np.linspace(0.0, 1.0, bins + 1))
+    edges[0], edges[-1] = uncertainty.min(), uncertainty.max() + 1e-12
+    index = np.clip(np.searchsorted(edges, uncertainty, side="right") - 1, 0, bins - 1)
+
+    out = []
+    for b in range(bins):
+        selected = index == b
+        if not selected.any():
+            continue
+        out.append(
+            {
+                "bin": b,
+                "uncertainty_low": round(float(edges[b]), 6),
+                "uncertainty_high": round(float(edges[b + 1]), 6),
+                "mean_uncertainty": round(float(uncertainty[selected].mean()), 6),
+                "mean_absolute_error": round(float(absolute_error[selected].mean()), 6),
+                "n": int(selected.sum()),
+            }
+        )
+    return out

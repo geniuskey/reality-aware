@@ -123,6 +123,7 @@ Individual figures can be regenerated one at a time, without re-running the benc
 python scripts/plot_wafer_comparison.py --wafer 0 --seed 0
 python scripts/plot_uncertainty.py --wafer 0 --seed 0
 python scripts/plot_paired_improvement.py          # reads the results file
+python scripts/plot_calibration.py                 # reads the results file
 python scripts/record_demo.py --wafer 0 --seed 0
 ```
 

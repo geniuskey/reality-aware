@@ -17,6 +17,7 @@ const to = path.join(root, 'docs', 'public', 'results')
 /** Figures the site knows how to display. Anything else stays out of docs/. */
 const published = [
   'error_curve.svg',
+  'calibration.svg',
   'wafer_comparison.webp',
   'uncertainty_before_after.webp',
   'paired_improvement.svg',

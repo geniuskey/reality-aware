@@ -28,9 +28,14 @@ selection rule ranks locations well on continuous data.
 ### Uncertainty is used, not claimed to be calibrated
 
 NANO computes an uncertainty map and ranks locations by it. It does **not** claim that the map is
-calibrated — that a stated interval covers the truth at the stated rate. Ranking can be useful while
-calibration is poor, and calibration has not been evaluated here. Any use of these uncertainty values
-as probabilities would be unsupported.
+calibrated — that a stated interval covers the truth at the stated rate.
+
+The weaker property, that uncertainty *orders* the unmeasured dies by how wrong the estimate is
+there, **is** now measured: every run reports a Spearman rank correlation and a binned reliability
+curve over the dies the agent never looked at, and the
+[benchmark page](./benchmark) publishes both. That is the property the acquisition rule depends on,
+and it is the only one being asserted. Coverage is still not evaluated, no interval is stated, and
+any use of these uncertainty values as probabilities would be unsupported.
 
 ### The stand-in wafer source is not the dataset
 

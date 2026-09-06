@@ -240,6 +240,37 @@ def test_an_unknown_metric_is_refused():
         )
 
 
+def test_calibration_is_measured_on_dies_the_agent_never_saw(summary):
+    calibration = summary["calibration"]
+    assert calibration["n_dies"] > 0
+    assert "unmeasured" in calibration["scope"]
+
+    bins = calibration["reliability"]
+    assert len(bins) == 10
+    assert sum(b["n"] for b in bins) == calibration["n_dies"]
+
+    rho = calibration["rank_correlation"]
+    assert -1.0 <= rho["pooled"] <= 1.0
+    assert "not a coverage claim" in rho["note"]
+
+
+def test_calibration_excludes_measured_dies():
+    """A measured die has zero uncertainty and zero error by construction.
+
+    Counting those would manufacture a correlation out of the tool's own
+    bookkeeping rather than measuring the map.
+    """
+    from nano.data import synthetic_wafers
+
+    wafers = synthetic_wafers(2, seed=1, grid=20)
+    summary = run_benchmark(
+        wafers, seeds=[0], initial_measurements=10, budget=12
+    )
+    measured = (10 + 12) * len(wafers)
+    total_dies = sum(w.n_dies for w in wafers)
+    assert summary["calibration"]["n_dies"] == total_dies - measured
+
+
 def test_the_bias_parameters_are_recorded_and_shared(summary):
     bias = summary["experiment"]["prior_bias"]
     assert bias["radial_strength"] > 0

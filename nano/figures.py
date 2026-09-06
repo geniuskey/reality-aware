@@ -135,6 +135,51 @@ def plot_paired_improvement(summary: dict, path: Path | str) -> Path:
     return save(fig, path)
 
 
+def plot_calibration(summary: dict, path: Path | str) -> Path:
+    """Reported uncertainty against the error actually made, in equal-count bins.
+
+    A rising curve means the map ranks usefully — the property the acquisition
+    rule depends on. A flat one would mean the uncertainty map is decorative.
+    The diagonal is *not* drawn: no interval is claimed, so there is no coverage
+    line to be close to, and drawing one would imply a calibration claim this
+    project does not make.
+    """
+    calibration = summary.get("calibration") or {}
+    bins = calibration.get("reliability") or []
+    if not bins:
+        raise ValueError("summary has no calibration bins to plot")
+
+    xs = [b["mean_uncertainty"] for b in bins]
+    ys = [b["mean_absolute_error"] for b in bins]
+    counts = [b["n"] for b in bins]
+
+    fig, ax = plt.subplots(figsize=(6.6, 4.4))
+    ax.plot(xs, ys, marker="o", color=STRATEGY_STYLE["nano"]["color"], linewidth=1.8)
+    for x, y, n in zip(xs, ys, counts):
+        ax.annotate(f"n={n}", (x, y), textcoords="offset points", xytext=(0, 7),
+                    ha="center", fontsize=6.5, color="#666")
+
+    rho = calibration.get("rank_correlation", {})
+    ax.set_xlabel("reported uncertainty (bin mean)")
+    ax.set_ylabel("absolute error actually made")
+    ax.set_title(
+        f"Does uncertainty rank the unmeasured dies? Spearman ρ = {rho.get('pooled', float('nan')):.3f}",
+        fontsize=10,
+    )
+    ax.grid(alpha=0.2)
+    ax.text(
+        0.02,
+        0.96,
+        calibration.get("scope", ""),
+        transform=ax.transAxes,
+        fontsize=7,
+        color="#666",
+        va="top",
+    )
+    _footer(fig, summary)
+    return save(fig, path)
+
+
 def plot_wafer_comparison(
     record: WaferRecord, prior: np.ndarray, episode: EpisodeResult, path: Path | str
 ) -> Path:

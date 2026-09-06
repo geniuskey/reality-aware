@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from nano.metrics import metric_set, paired_bootstrap
+from nano.metrics import metric_set, paired_bootstrap, rank_correlation, reliability_bins
 
 
 def test_mae_is_dominated_by_the_majority_class():
@@ -91,3 +91,50 @@ def test_mismatched_arms_are_refused():
         paired_bootstrap([0.1, 0.2], [0.1], seed=0)
     with pytest.raises(ValueError, match="at least one episode"):
         paired_bootstrap([], [], seed=0)
+
+
+def test_rank_correlation_finds_a_monotone_relationship():
+    uncertainty = np.linspace(0, 1, 200)
+    error = uncertainty**2  # monotone but not linear
+    assert rank_correlation(uncertainty, error) == pytest.approx(1.0)
+    assert rank_correlation(uncertainty, -error) == pytest.approx(-1.0)
+
+
+def test_rank_correlation_is_zero_when_uncertainty_says_nothing():
+    rng = np.random.default_rng(0)
+    uncertainty = rng.random(4000)
+    error = rng.random(4000)
+    assert abs(rank_correlation(uncertainty, error)) < 0.1
+
+
+def test_rank_correlation_averages_tied_ranks():
+    """Uncertainty is full of ties once a budget is spent; they must not skew it."""
+    assert rank_correlation([1, 1, 2, 2], [1, 2, 1, 2]) == pytest.approx(0.0)
+    assert rank_correlation([1, 1, 2, 2], [0, 0, 5, 5]) == pytest.approx(1.0)
+
+
+def test_reliability_bins_are_equal_count_and_ordered():
+    rng = np.random.default_rng(0)
+    uncertainty = rng.random(1000)
+    error = uncertainty * 0.4 + rng.normal(0, 0.02, 1000)
+    bins = reliability_bins(uncertainty, error, bins=5)
+
+    assert len(bins) == 5
+    assert sum(b["n"] for b in bins) == 1000
+    assert max(b["n"] for b in bins) - min(b["n"] for b in bins) <= 1
+
+    means = [b["mean_absolute_error"] for b in bins]
+    assert means == sorted(means)  # a useful map produces a rising curve
+
+
+def test_reliability_of_a_useless_map_is_flat():
+    rng = np.random.default_rng(1)
+    bins = reliability_bins(rng.random(4000), rng.random(4000), bins=4)
+    means = [b["mean_absolute_error"] for b in bins]
+    assert max(means) - min(means) < 0.05
+
+
+def test_reliability_handles_an_empty_input():
+    assert reliability_bins([], []) == []
+    with pytest.raises(ValueError, match="one error per uncertainty"):
+        reliability_bins([0.1, 0.2], [0.1])

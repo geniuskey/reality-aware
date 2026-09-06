@@ -21,7 +21,15 @@ from nano.agent import EpisodeResult, draw_initial_mask, run_episode
 from nano.baselines import build_policies
 from nano.policy import ABLATIONS, TERMS, AcquisitionPolicy
 from nano.data import WaferRecord, summarise_patterns
-from nano.metrics import DEFAULT_PRIMARY, METRIC_LABELS, mae, metric_set, paired_bootstrap
+from nano.metrics import (
+    DEFAULT_PRIMARY,
+    METRIC_LABELS,
+    mae,
+    metric_set,
+    paired_bootstrap,
+    rank_correlation,
+    reliability_bins,
+)
 from nano.model import RealityModel, default_length_scale
 from nano.prior import BiasParams, make_biased_prior
 
@@ -78,6 +86,11 @@ def run_benchmark(
     scores: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     by_pattern: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     episodes: list[dict] = []
+    # Calibration evidence, pooled over episodes: the uncertainty NANO reported
+    # at each die it never measured, against the error it actually made there.
+    calibration_uncertainty: list[np.ndarray] = []
+    calibration_error: list[np.ndarray] = []
+    calibration_rho: list[float] = []
 
     for record in records:
         if record.target_kind != target_kind:
@@ -140,6 +153,20 @@ def run_benchmark(
                 by_pattern[name][record.pattern].append(final)
                 entry["final"][name] = round(final, 6)
 
+                if name == "nano":
+                    # Only unmeasured dies: a measured die has zero uncertainty
+                    # and zero error by construction, and including those would
+                    # manufacture a correlation out of the tool's own bookkeeping.
+                    unseen = ~episode.observed_mask
+                    if unseen.any():
+                        unseen_uncertainty = episode.uncertainty[unseen]
+                        unseen_error = np.abs(episode.prediction[unseen] - record.reality[unseen])
+                        calibration_uncertainty.append(unseen_uncertainty)
+                        calibration_error.append(unseen_error)
+                        calibration_rho.append(
+                            rank_correlation(unseen_uncertainty, unseen_error)
+                        )
+
             episodes.append(entry)
 
     arms = _arms(budget, records[0].coords, ablation, terms)
@@ -173,6 +200,10 @@ def run_benchmark(
         for name in arms
         if name in ABLATIONS and name != "nano"
     }
+
+    calibration = _calibration_block(
+        calibration_uncertainty, calibration_error, calibration_rho
+    )
 
     reference_block = {
         "prior": {
@@ -250,9 +281,11 @@ def run_benchmark(
         "strategies": strategies,
         "references": reference_block,
         "ablation": ablation_block,
+        "calibration": calibration,
         "comparisons": comparisons,
         "episodes": episodes,
         "assets": {
+            "calibration": "results/calibration.svg",
             "error_curve": "results/error_curve.svg",
             "wafer_comparison": "results/wafer_comparison.webp",
             "uncertainty_before_after": "results/uncertainty_before_after.webp",
@@ -316,6 +349,37 @@ def _git_commit() -> str | None:
         return None
     commit = out.stdout.strip()
     return commit or None
+
+
+def _calibration_block(
+    uncertainty: list[np.ndarray], errors: list[np.ndarray], rho: list[float]
+) -> dict:
+    """Does the uncertainty map order the dies by how wrong the estimate is?
+
+    NANO ranks locations by uncertainty, so this is the property the acquisition
+    rule actually depends on. It is *not* a calibration claim in the strict
+    sense: no interval is stated, so no coverage can be checked, and the field is
+    named `rank_correlation` rather than `calibration_error` to keep those apart.
+    """
+    if not uncertainty:
+        return {}
+    pooled_uncertainty = np.concatenate(uncertainty)
+    pooled_error = np.concatenate(errors)
+    finite = np.asarray([value for value in rho if np.isfinite(value)], dtype=float)
+    return {
+        "scope": "unmeasured dies at the end of the budget, NANO arm",
+        "n_dies": int(pooled_uncertainty.size),
+        "rank_correlation": {
+            "pooled": round(rank_correlation(pooled_uncertainty, pooled_error), 6),
+            "per_episode_mean": round(float(finite.mean()), 6) if finite.size else None,
+            "per_episode_std": round(float(finite.std(ddof=0)), 6) if finite.size else None,
+            "note": (
+                "Spearman correlation between reported uncertainty and absolute error. "
+                "Positive means the map ranks usefully; it is not a coverage claim."
+            ),
+        },
+        "reliability": reliability_bins(pooled_uncertainty, pooled_error),
+    }
 
 
 def _arms(budget: int, coords: np.ndarray, ablation: bool, terms: Sequence[str] = TERMS) -> dict:

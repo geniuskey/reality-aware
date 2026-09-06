@@ -7,7 +7,8 @@ from pathlib import Path
 
 from nano.agent import draw_initial_mask, run_episode
 from nano.cli import RESULTS_DIR, add_experiment_args, add_source_args, resolve_wafers, source_warning
-from nano.evaluate import DEFAULT_OUTPUT, mae, run_benchmark, write_summary
+from nano.evaluate import DEFAULT_OUTPUT, run_benchmark, write_summary
+from nano.metrics import metric_set
 from nano.model import RealityModel
 from nano.policy import TERMS, AcquisitionPolicy
 from nano.prior import BiasParams, make_biased_prior
@@ -63,6 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     path = write_summary(summary, args.out)
     _report(summary)
     _report_ablation(summary)
+    _report_calibration(summary)
     print(f"wrote {path}")
 
     if not args.no_figures:
@@ -96,6 +98,19 @@ def _report(summary: dict) -> None:
             if name in comparisons:
                 line += "   " + _verdict(comparisons[name])
             print(line)
+
+
+def _report_calibration(summary: dict) -> None:
+    """Whether the uncertainty map ranks usefully — reported, never assumed."""
+    calibration = summary.get("calibration") or {}
+    rho = calibration.get("rank_correlation") or {}
+    if not rho:
+        return
+    print(
+        f"  uncertainty ranking: Spearman ρ = {rho['pooled']:.3f} pooled, "
+        f"{rho['per_episode_mean']:.3f} ± {rho['per_episode_std']:.3f} per episode "
+        f"({calibration['n_dies']} unmeasured dies) — ranking only, not a coverage claim"
+    )
 
 
 def _report_ablation(summary: dict) -> None:
@@ -143,6 +158,8 @@ def _figures(summary: dict, records, args: argparse.Namespace, bias: BiasParams)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     figures.plot_error_curve(summary, RESULTS_DIR / "error_curve.svg")
     figures.plot_paired_improvement(summary, RESULTS_DIR / "paired_improvement.svg")
+    if summary.get("calibration", {}).get("reliability"):
+        figures.plot_calibration(summary, RESULTS_DIR / "calibration.svg")
 
     # One representative episode, re-run with the same seed so the figure shows
     # exactly what the benchmark scored.
@@ -162,10 +179,12 @@ def _figures(summary: dict, records, args: argparse.Namespace, bias: BiasParams)
     )
     figures.plot_wafer_comparison(record, prior, episode, RESULTS_DIR / "wafer_comparison.webp")
     figures.plot_uncertainty_before_after(record, episode, RESULTS_DIR / "uncertainty_before_after.webp")
+    primary = summary["metric"]["key"]
+    score = metric_set(episode.prediction, record.reality, record.target_kind)[primary]
     print(
         f"  figures written to {RESULTS_DIR}/ "
         f"(episode figure: {record.wafer_id}, seed {seed}, "
-        f"final {summary['metric']['name']} {mae(episode.prediction, record.reality):.4f})"
+        f"final {summary['metric']['name']} {score:.4f})"
     )
 
 

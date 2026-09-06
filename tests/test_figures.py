@@ -59,6 +59,17 @@ def test_the_gif_records_the_whole_episode(tmp_path, run):
     assert path.read_bytes()[:3] == b"GIF"
 
 
+def test_calibration_figure_is_written(tmp_path, run):
+    summary, *_ = run
+    path = figures.plot_calibration(summary, tmp_path / "calibration.svg")
+    assert path.exists() and path.stat().st_size > 0
+
+
+def test_calibration_figure_needs_bins(tmp_path):
+    with pytest.raises(ValueError, match="no calibration bins"):
+        figures.plot_calibration({"calibration": {}}, tmp_path / "x.svg")
+
+
 def test_paired_improvement_needs_a_run_not_an_expectation(tmp_path):
     with pytest.raises(ValueError, match="no per-episode records"):
         figures.plot_paired_improvement({"strategies": {}}, tmp_path / "x.svg")
@@ -69,6 +80,7 @@ def test_published_figure_names_match_the_sync_script(tmp_path, run):
     published = set(json.loads(_published_names()))
     produced = {
         "error_curve.svg",
+        "calibration.svg",
         "paired_improvement.svg",
         "wafer_comparison.webp",
         "uncertainty_before_after.webp",

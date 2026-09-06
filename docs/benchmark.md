@@ -144,6 +144,28 @@ questions and should never be read off the same legend.
 A mean improvement can hide a rule that helps most wafers a little and hurts a few a lot. The paired
 distribution is the figure that would expose that, which is why it is here rather than a single bar.
 
+## Does the uncertainty map rank anything?
+
+NANO ranks locations by uncertainty, so the map has to order the dies by how wrong the estimate is
+there — otherwise the acquisition rule is sorting on noise. The run checks it directly: on the dies
+the agent never measured, bin by reported uncertainty and report the error actually made.
+
+<ResultAsset
+  file="calibration.svg"
+  title="Reported uncertainty against the error actually made"
+  caption="Equal-count bins over the unmeasured dies at the end of the budget, with the Spearman rank correlation printed."
+  producedBy="scripts/plot_calibration" />
+
+Measured dies are excluded on purpose. They have zero uncertainty and zero error by construction, so
+including them would manufacture a correlation out of the tool's own bookkeeping.
+
+::: warning This is a ranking check, not a calibration claim
+A rising curve says uncertainty *orders* the dies usefully. It does not say the values are
+probabilities, and nothing here evaluates whether a stated interval covers the truth at its stated
+rate — no interval is stated. The results file names the field `rank_correlation` for that reason.
+See [Honest Scope](./limitations).
+:::
+
 ## Where NANO fails
 
 ::: warning Not yet answered
